@@ -2,7 +2,7 @@ from docling.document_converter import DocumentConverter
 import yake
 import os
 import json
-from llm_extractor import SummarizerAgent, KeyExtractorAgent
+from .llm_extractor import SummarizerAgent, KeyExtractorAgent
 
 class AuthorDocumentProcessor:
     def __init__(self, base_data_path='data'):
