@@ -2,7 +2,7 @@ from docling.document_converter import DocumentConverter
 import yake
 import os
 import json
-from llm_extractor import SummarizerLLM, KeyExtractorLLM
+from llm_extractor import SummarizerAgent, KeyExtractorAgent
 
 class AuthorDocumentProcessor:
     def __init__(self, base_data_path='data'):
@@ -17,8 +17,8 @@ class AuthorDocumentProcessor:
         self.keyword_extractor = yake.KeywordExtractor()
         
         # Initialize LLM agents
-        self.summarizer = SummarizerLLM()
-        self.key_extractor = KeyExtractorLLM()
+        self.summarizer = SummarizerAgent()
+        self.key_extractor = KeyExtractorAgent()
 
     def _section_chunker(self, text: str, symbol: str = "## ", 
                         sections=['Introduction', "Conclusion"]) -> list:
