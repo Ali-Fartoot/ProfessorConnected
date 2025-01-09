@@ -90,14 +90,14 @@ class KeyExtractorAgent(LLMAgent):
             n=n,
             stop=stop    
         )
-
-        try:
-            keywords = eval(response.choices[0].message.content)
-            if not isinstance(keywords, list):
-                return []
-            return [str(k).lower() for k in keywords if isinstance(k, str)]
-        except:
-            raise TypeError(f"The Parser for {self.__class__.__name__} failed. Agent didn't return as a list!")
+        return response.choices[0].message.content
+        # try:
+        #     keywords = eval(response.choices[0].message.content)
+        #     if not isinstance(keywords, list):
+        #         return []
+        #     return [str(k).lower() for k in keywords if isinstance(k, str)]
+        # except:
+        #     raise TypeError(f"The Parser for {self.__class__.__name__} failed. Agent didn't return as a list!")
         
 
 
@@ -166,11 +166,12 @@ class SummarizerAgent(LLMAgent):
             n=n,
             stop=stop    
         )
+        return response.choices[0].message.content
 
-        try:
-            summary = response.choices[0].message.content
-            if not isinstance(summary, str):
-                raise TypeError("Summary must be a string")
-            return summary.strip()
-        except Exception as e:
-            raise TypeError(f"The Parser for {self.__class__.__name__} failed: {str(e)}")
+        # try:
+        #     summary = response.choices[0].message.content
+        #     if not isinstance(summary, str):
+        #         raise TypeError("Summary must be a string")
+        #     return summary.strip()
+        # except Exception as e:
+        #     raise TypeError(f"The Parser for {self.__class__.__name__} failed: {str(e)}")
