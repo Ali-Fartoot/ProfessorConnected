@@ -17,3 +17,4 @@ run:
 test:
 	@echo "Running tests..."
 	. ./venv/bin/activate && pytest ./tests/ -v --capture=no --log-cli-level=INFO
+
