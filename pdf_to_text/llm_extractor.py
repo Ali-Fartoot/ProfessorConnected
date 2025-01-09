@@ -107,36 +107,8 @@ class SummarizerAgent(LLMAgent):
         self.message_template = message or [
             {
                 "role": "system",
-                "content": """You are a specialized text summarization assistant. Your task is to create concise, 
-                accurate summaries while following these guidelines:
-
-                SUMMARY REQUIREMENTS:
-                - Maintain the core message and key points of the original text
-                - Use clear and concise language
-                - Preserve important facts and relationships
-                - Remove redundant information
-                - Keep the original meaning intact
-                
-                STRUCTURE:
-                - Create a summary of 5-6 sentences
-                - Focus on the main ideas and key findings
-                - Maintain logical flow and coherence
-                - Use active voice when possible
-                
-                FORMAT:
-                - Return a single string containing the summary
-                - Do not include phrases like "This text discusses..." or "This article is about..."
-                - Start directly with the main content
-                - Use proper punctuation and grammar
-                
-                Example:
-                Input: "Professor Smith from Harvard University conducted a comprehensive study on climate change effects 
-                in urban areas over the past decade. The research involved 20 major cities and found significant temperature 
-                increases in city centers. The study also revealed that green spaces can reduce urban heat island effects by up to 30%."
-                
-                Output: "A comprehensive study on climate change effects in urban areas examined 20 major cities over a decade, 
-                revealing significant temperature increases in city centers. Green spaces were found to reduce urban heat island 
-                effects by up to 30%."
+                "content": """You are a assitant text summarization assistant. Your task is to create concise, 
+                accurate summaries. FYI the given text is from papers:
                 """
             },
             {
@@ -152,8 +124,8 @@ class SummarizerAgent(LLMAgent):
 
     def infer(self, 
               text: str, 
-              temperature: float = 0.7, 
-              max_token: int = 2048, 
+              temperature: float = 0.6, 
+              max_token: int = 4000, 
               n: int = 1, 
               stop: str = None) -> str:
 

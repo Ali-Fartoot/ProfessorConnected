@@ -1,6 +1,9 @@
 from crawler import crawl
 from pdf_to_text import AuthorDocumentProcessor
 import os
+import time
+
+start = time.time()
 
 document_processor = AuthorDocumentProcessor()
 name = input()
@@ -14,3 +17,7 @@ if not os.path.exists(os.path.join("data", name, name + ".json")):
     document_processor(name)
 else:
     print("The author papers are already processed")
+
+end = time.time()
+
+print(f"The app took {end - start}")
