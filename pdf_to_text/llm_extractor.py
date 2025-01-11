@@ -62,12 +62,8 @@ class KeyExtractorAgent(LLMAgent):
             },
             {
                 "role": "user",
-                "content": [
-                    {
-                        "type": "text",
-                        "text": None
-                    }
-                ]
+                "content": None
+    
             }
         ]
 
@@ -79,7 +75,7 @@ class KeyExtractorAgent(LLMAgent):
               stop: str = None) -> list[str]:
 
         # Update the message template with the input text
-        self.message_template[1]["content"][0]["text"] = text
+        self.message_template[1]["content"] = str(text)
         
     
         response = self.client.chat.completions.create(
@@ -108,17 +104,11 @@ class SummarizerAgent(LLMAgent):
             {
                 "role": "system",
                 "content": """You are a assitant text summarization assistant. Your task is to create concise, 
-                accurate summaries. FYI the given text is from papers:
-                """
+                accurate summaries. FYI the given text is from papers."""
             },
             {
                 "role": "user",
-                "content": [
-                    {
-                        "type": "text",
-                        "text": None
-                    }
-                ]
+                "content": None
             }
         ]
 
@@ -129,7 +119,7 @@ class SummarizerAgent(LLMAgent):
               n: int = 1, 
               stop: str = None) -> str:
 
-        self.message_template[1]["content"][0]["text"] = text
+        self.message_template[1]["content"]= str(text)
         response = self.client.chat.completions.create(
             model="local-model",
             messages=self.message_template,

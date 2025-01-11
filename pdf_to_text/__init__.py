@@ -54,24 +54,20 @@ class AuthorDocumentProcessor:
         """
         try:
 
-            print("\n".join(sections))
-            print("-------------------------------")
-            print(text)
-            print("-------------------------------")
-            print(sections)
-            xd
-            # llm_results = {
-            #     "summaries": {
-            #         "overall": self.summarizer.infer(text),
-            #         "sections": self.summarizer.infer("\n".join(sections))
-            #     },
-            #     "keywords": {
-            #         "overall": self.key_extractor.infer(text),
-            #         "introduction": self.key_extractor.infer(sections[0]) if sections else [],
-            #         "conclusion": self.key_extractor.infer(sections[1]) if len(sections) > 1 else []
-            #     }
-            #}
-            return None
+
+
+            llm_results = {
+                "summaries": {
+                    "overall": self.summarizer.infer(text),
+                    "sections": self.summarizer.infer("\n".join(sections))
+                },
+                "keywords": {
+                    "overall": self.key_extractor.infer(text),
+                    "introduction": self.key_extractor.infer(sections[0]),
+                    "conclusion": self.key_extractor.infer(sections[1])
+                }
+            }
+            return llm_results
         except Exception as e:
             print(f"Error in LLM processing: {str(e)}")
             return {
