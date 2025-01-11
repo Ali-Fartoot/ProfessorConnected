@@ -12,7 +12,8 @@ run:
 	. ./venv/bin/activate && $(PYTHON) -m llama_cpp.server --port 5333  \
 		$(if $(filter true,$(USE_GPU)),--n_gpu_layers 30,--n_gpu_layers 0) \
 		--model ./models/Mistral-Nemo-Prism-12B-Q6_K.gguf \
-		--chat_format mistral-instruct  > llm.log 
+		--chat_format mistral-instruct \
+		--ctx_size 100000 > llm.log 
 
 test:
 	@echo "Running tests..."
