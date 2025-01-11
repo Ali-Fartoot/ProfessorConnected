@@ -70,7 +70,7 @@ class KeyExtractorAgent(LLMAgent):
     def infer(self, 
               text: str, 
               temperature: float = 0.7, 
-              max_token: int = 2048, 
+              max_token: int = 20000, 
               n: int = 1, 
               stop: str = None) -> list[str]:
 
@@ -115,7 +115,7 @@ class SummarizerAgent(LLMAgent):
     def infer(self, 
               text: str, 
               temperature: float = 0.6, 
-              max_token: int = 4000, 
+              max_token: int = 20000, 
               n: int = 1, 
               stop: str = None) -> str:
 
