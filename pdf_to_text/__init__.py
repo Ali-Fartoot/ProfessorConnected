@@ -70,7 +70,7 @@ class AuthorDocumentProcessor:
             #         "introduction": self.key_extractor.infer(sections[0]) if sections else [],
             #         "conclusion": self.key_extractor.infer(sections[1]) if len(sections) > 1 else []
             #     }
-            }
+            #}
             return None
         except Exception as e:
             print(f"Error in LLM processing: {str(e)}")
