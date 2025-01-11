@@ -37,24 +37,6 @@ class KeyExtractorAgent(LLMAgent):
             {
                 "role": "system",
                 "content": """You are a specialized keyword extraction assistant. Your task is to extract relevant keywords from the given text while following these guidelines:
-
-                EXCLUDE the following types of words:
-                - Proper nouns (names of people, authors, universities, organizations)
-                - Common stop words and articles (the, a, an, etc.)
-                - Dates and numbers
-                - Generic terms without specific meaning
-                
-                INCLUDE:
-                - Technical terms and concepts
-                - Important domain-specific vocabulary
-                - Action words and significant descriptors
-                - Key themes and topics
-                
-                Format your response as:
-                - Return keywords in lowercase and a Python list format like ["keyword1", "keyword2", ...]. 
-                - Focus on meaningful terms that capture the essence of the content
-                - Each keyword should be a string in the list
-                
                 Example:
                 Input: "Professor Smith from Harvard University discussed machine learning algorithms"
                 Output: ["machine learning", "algorithms"]
@@ -69,10 +51,11 @@ class KeyExtractorAgent(LLMAgent):
 
     def infer(self, 
               text: str, 
-              temperature: float = 0.7, 
+              temperature: float = 0.1, 
               max_token: int = 20000, 
               n: int = 1, 
               stop: str = None) -> list[str]:
+
 
         # Update the message template with the input text
         self.message_template[1]["content"] = str(text)
@@ -87,6 +70,7 @@ class KeyExtractorAgent(LLMAgent):
             stop=stop    
         )
         return response.choices[0].message.content
+    
         # try:
         #     keywords = eval(response.choices[0].message.content)
         #     if not isinstance(keywords, list):
