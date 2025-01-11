@@ -58,11 +58,11 @@ class AuthorDocumentProcessor:
 
             llm_results = {
                 "summaries": {
-                    "overall": self.summarizer.infer(text),
+                    # "overall": self.summarizer.infer(text),
                     "sections": self.summarizer.infer("\n".join(sections))
                 },
                 "keywords": {
-                    "overall": self.key_extractor.infer(text),
+                    # "overall": self.key_extractor.infer(text),
                     "introduction": self.key_extractor.infer(sections[0]),
                     "conclusion": self.key_extractor.infer(sections[1])
                 }
