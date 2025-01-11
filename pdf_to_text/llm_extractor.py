@@ -10,7 +10,6 @@ class LLMAgent(ABC):
         self.message_template = message or []
         self.client = OpenAI(base_url="http://localhost:5333/v1", api_key="llama.cpp")
 
-    
     @abstractmethod
     def infer(self, 
               temperature: float = 0.9,
@@ -82,6 +81,7 @@ class KeyExtractorAgent(LLMAgent):
         # Update the message template with the input text
         self.message_template[1]["content"][0]["text"] = text
         
+    
         response = self.client.chat.completions.create(
             model="local-model",
             messages=self.message_template,
@@ -98,7 +98,7 @@ class KeyExtractorAgent(LLMAgent):
         #     return [str(k).lower() for k in keywords if isinstance(k, str)]
         # except:
         #     raise TypeError(f"The Parser for {self.__class__.__name__} failed. Agent didn't return as a list!")
-        
+
 
 
 class SummarizerAgent(LLMAgent):

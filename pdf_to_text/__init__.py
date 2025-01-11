@@ -53,18 +53,25 @@ class AuthorDocumentProcessor:
             dict: Dictionary containing LLM processing results
         """
         try:
-            llm_results = {
-                "summaries": {
-                    "overall": self.summarizer.infer(text),
-                    "sections": self.summarizer.infer("\n".join(sections))
-                },
-                "keywords": {
-                    "overall": self.key_extractor.infer(text),
-                    "introduction": self.key_extractor.infer(sections[0]) if sections else [],
-                    "conclusion": self.key_extractor.infer(sections[1]) if len(sections) > 1 else []
-                }
+
+            print("\n".join(sections))
+            print("-------------------------------")
+            print(text)
+            print("-------------------------------")
+            print(sections)
+            xd
+            # llm_results = {
+            #     "summaries": {
+            #         "overall": self.summarizer.infer(text),
+            #         "sections": self.summarizer.infer("\n".join(sections))
+            #     },
+            #     "keywords": {
+            #         "overall": self.key_extractor.infer(text),
+            #         "introduction": self.key_extractor.infer(sections[0]) if sections else [],
+            #         "conclusion": self.key_extractor.infer(sections[1]) if len(sections) > 1 else []
+            #     }
             }
-            return llm_results
+            return None
         except Exception as e:
             print(f"Error in LLM processing: {str(e)}")
             return {
