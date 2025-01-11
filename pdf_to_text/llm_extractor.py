@@ -37,9 +37,7 @@ class KeyExtractorAgent(LLMAgent):
             {
                 "role": "system",
                 "content": """You are a specialized keyword extraction assistant. Your task is to extract relevant keywords from the given text while following these guidelines:
-                Example:
-                Input: "Professor Smith from Harvard University discussed machine learning algorithms"
-                Output: ["machine learning", "algorithms"]
+                return keywords as list like python.
                 """
             },
             {
@@ -56,11 +54,8 @@ class KeyExtractorAgent(LLMAgent):
               n: int = 1, 
               stop: str = None) -> list[str]:
 
-
         # Update the message template with the input text
         self.message_template[1]["content"] = str(text)
-        
-    
         response = self.client.chat.completions.create(
             model="local-model",
             messages=self.message_template,
