@@ -57,8 +57,8 @@ class AuthorDocumentProcessor:
         """
         try:
 
-            introduction_keyword = self.key_extractor.extract_keywords(sections[0])
-            conclusion_keywords = self.key_extractor.extract_keywords(sections[0])
+            introduction_keyword = [i[0] for i in self.key_extractor.extract_keywords(sections[0])]
+            conclusion_keywords = [i[0] for i in self.key_extractor.extract_keywords(sections[1])]
 
             llm_results = {
                 "summaries": {
