@@ -188,6 +188,7 @@ class ProfessorResearchProfile:
         }
 
 # Example professor data
+# Example data for 10 professors
 professor_data = [
     {
         "name": "Dr. Sarah Chen",
@@ -209,7 +210,166 @@ professor_data = [
             }
         ]
     },
-    # ... [Previous professor data remains the same] ...
+    {
+        "name": "Dr. Michael Rodriguez",
+        "papers": [
+            {
+                "title": "Natural Language Processing in Healthcare",
+                "keywords": "NLP, healthcare, machine learning, text mining",
+                "summary": "Applications of NLP techniques in processing medical records and healthcare documentation."
+            },
+            {
+                "title": "Sentiment Analysis Using BERT",
+                "keywords": "BERT, sentiment analysis, transformers, NLP",
+                "summary": "Implementation of BERT models for advanced sentiment analysis tasks."
+            }
+        ]
+    },
+    {
+        "name": "Dr. Emily Watson",
+        "papers": [
+            {
+                "title": "Quantum Computing Algorithms",
+                "keywords": "quantum computing, algorithms, quantum optimization, quantum circuits",
+                "summary": "Development of novel algorithms for quantum computing applications."
+            },
+            {
+                "title": "Quantum Machine Learning",
+                "keywords": "quantum computing, machine learning, quantum algorithms, optimization",
+                "summary": "Integration of quantum computing principles with machine learning techniques."
+            },
+            {
+                "title": "Error Correction in Quantum Systems",
+                "keywords": "quantum error correction, quantum computing, fault tolerance",
+                "summary": "Analysis of error correction methods in quantum computing systems."
+            }
+        ]
+    },
+    {
+        "name": "Dr. James Kim",
+        "papers": [
+            {
+                "title": "Cybersecurity in IoT Networks",
+                "keywords": "IoT, cybersecurity, network security, encryption",
+                "summary": "Analysis of security challenges and solutions in IoT networks."
+            },
+            {
+                "title": "Blockchain Security Protocols",
+                "keywords": "blockchain, security protocols, cryptography, distributed systems",
+                "summary": "Development of secure protocols for blockchain applications."
+            }
+        ]
+    },
+    {
+        "name": "Dr. Lisa Martinez",
+        "papers": [
+            {
+                "title": "Cloud Computing Optimization",
+                "keywords": "cloud computing, optimization, distributed systems, scalability",
+                "summary": "Optimization techniques for cloud computing infrastructure and services."
+            },
+            {
+                "title": "Edge Computing Architecture",
+                "keywords": "edge computing, distributed systems, IoT, network architecture",
+                "summary": "Design and implementation of edge computing architectures."
+            },
+            {
+                "title": "Fog Computing Systems",
+                "keywords": "fog computing, distributed computing, IoT, edge computing",
+                "summary": "Analysis of fog computing systems and their applications."
+            }
+        ]
+    },
+    {
+        "name": "Dr. Robert Chang",
+        "papers": [
+            {
+                "title": "Reinforcement Learning in Robotics",
+                "keywords": "reinforcement learning, robotics, AI, machine learning",
+                "summary": "Application of reinforcement learning algorithms in robotic systems."
+            },
+            {
+                "title": "Multi-Agent Learning Systems",
+                "keywords": "multi-agent systems, AI, machine learning, cooperation",
+                "summary": "Development of learning algorithms for multi-agent systems."
+            }
+        ]
+    },
+    {
+        "name": "Dr. Amanda Brooks",
+        "papers": [
+            {
+                "title": "Big Data Analytics in Healthcare",
+                "keywords": "big data, healthcare analytics, data mining, machine learning",
+                "summary": "Analysis of big data applications in healthcare systems."
+            },
+            {
+                "title": "Predictive Analytics Models",
+                "keywords": "predictive analytics, machine learning, statistical modeling",
+                "summary": "Development of predictive analytics models for healthcare outcomes."
+            },
+            {
+                "title": "Data Mining in Electronic Health Records",
+                "keywords": "data mining, EHR, healthcare, pattern recognition",
+                "summary": "Application of data mining techniques to electronic health records."
+            }
+        ]
+    },
+    {
+        "name": "Dr. Thomas Wilson",
+        "papers": [
+            {
+                "title": "Software Testing Automation",
+                "keywords": "software testing, automation, quality assurance, CI/CD",
+                "summary": "Development of automated testing frameworks for software systems."
+            },
+            {
+                "title": "DevOps Practices in Software Engineering",
+                "keywords": "DevOps, software engineering, continuous integration, automation",
+                "summary": "Analysis of DevOps practices and their implementation."
+            }
+        ]
+    },
+    {
+        "name": "Dr. Rachel Green",
+        "papers": [
+            {
+                "title": "Human-Computer Interaction Design",
+                "keywords": "HCI, user interface, user experience, interaction design",
+                "summary": "Study of human-computer interaction principles and design patterns."
+            },
+            {
+                "title": "Accessibility in Mobile Applications",
+                "keywords": "accessibility, mobile computing, user interface, inclusive design",
+                "summary": "Research on accessibility features in mobile application design."
+            },
+            {
+                "title": "Virtual Reality Interface Design",
+                "keywords": "virtual reality, HCI, interface design, user experience",
+                "summary": "Design principles for virtual reality user interfaces."
+            }
+        ]
+    },
+    {
+        "name": "Dr. David Park",
+        "papers": [
+            {
+                "title": "Network Security Protocols",
+                "keywords": "network security, cryptography, security protocols, cybersecurity",
+                "summary": "Analysis and development of network security protocols."
+            },
+            {
+                "title": "Intrusion Detection Systems",
+                "keywords": "intrusion detection, network security, machine learning, cybersecurity",
+                "summary": "Development of advanced intrusion detection systems."
+            },
+            {
+                "title": "Zero-Trust Security Architecture",
+                "keywords": "zero-trust, security architecture, network security, authentication",
+                "summary": "Implementation of zero-trust security principles in network systems."
+            }
+        ]
+    }
 ]
 
 if __name__ == "__main__":
