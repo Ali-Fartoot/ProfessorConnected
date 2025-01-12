@@ -2,9 +2,9 @@ from docling.document_converter import DocumentConverter
 import yake
 import os
 import json
-from .llm_extractor import SummarizerAgent, ExpandKeywordsAgent
+from .llm_extractor import SummarizerAgent, KeyextractorLLM
 from keybert import KeyBERT
-
+from keybert import KeyLLM
 
 class AuthorDocumentProcessor:
     def __init__(self, base_data_path='data'):
@@ -21,7 +21,7 @@ class AuthorDocumentProcessor:
         # Initialize LLM agents
         self.summarizer = SummarizerAgent()
         self.key_extractor = KeyBERT()
-        self.keywords_expander = ExpandKeywordsAgent()
+        self.keywords_expander = KeyextractorLLM()
 
     def _section_chunker(self, text: str, symbol: str = "## ", 
                         sections=['Introduction', "Conclusion"]) -> list:
@@ -57,19 +57,19 @@ class AuthorDocumentProcessor:
         """
         try:
 
-            introduction_keyword = [i[0] for i in self.key_extractor.extract_keywords(sections[0])]
+            introduction_keywords = [i[0] for i in self.key_extractor.extract_keywords(sections[0])]
             conclusion_keywords = [i[0] for i in self.key_extractor.extract_keywords(sections[1])]
 
             llm_results = {
-                "summaries": {
-                    "sections": self.summarizer.infer("\n".join(sections))
-                },
+                # "summaries": {
+                #     "sections": self.summarizer.infer("\n".join(sections))
+                # },
                 "keywords": {
-                    "introduction": introduction_keyword,
+                    "introduction": introduction_keywords,
                     "conclusion": conclusion_keywords
                 },
                 "expanded_keywords":{
-                    "introduction": self.keywords_expander.infer(introduction_keyword),
+                    "introduction": self.keywords_expander.infer(introduction_keywords),
                     "conclusion": self.keywords_expander.infer(conclusion_keywords)
                 }
                 
