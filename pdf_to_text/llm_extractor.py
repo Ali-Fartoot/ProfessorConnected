@@ -48,7 +48,7 @@ class SummarizerAgent(LLMAgent):
 
     def infer(self, 
               text: str, 
-              temperature: float = 0.7, 
+              temperature: float = 0.5, 
               stop: str = None) -> str:
 
         self.message_template[1]["content"] = f'''Your task is to create concise, accurate summaries. Please point at techniques by considering keywords. The summerization should have two part introduction and conclusion. but don't mention that by exact world
@@ -65,7 +65,26 @@ class SummarizerAgent(LLMAgent):
 class KeyExtractorLLM(LLMAgent):
     def __init__(self, message=None):
         super().__init__(message)
-        self.key_extractor = KeyLLM(keybert_openai(self.client))
+        DEFAULT_PROMPT = """
+        The following is a list of documents. Please extract the top keywords, separated by a comma, that describe the topic of the texts.
+        Note Please remove specific name such as Person, Oragazonation, Country etc.
+
+        Document:
+        - Traditional diets in most cultures were primarily plant-based with a little meat on top, but with the rise of industrial style meat production and factory farming, meat has become a staple food.
+
+        Keywords: Traditional diets, Plant-based, Meat, Industrial style meat production, Factory farming, Staple food, Cultural dietary practices
+
+        Document:
+        - The website mentions that it only takes a couple of days to deliver but I still have not received mine.
+
+        Keywords: Website, Delivery, Mention, Timeframe, Not received, Waiting, Order fulfillment
+
+        Document:
+        - [DOCUMENT]
+
+        Keywords:"""
+
+        self.key_extractor = KeyLLM(keybert_openai(self.client, prompt=DEFAULT_PROMPT))
 
     def infer(self, text: str):
         # Use the KeyLLM instance to extract keywords
