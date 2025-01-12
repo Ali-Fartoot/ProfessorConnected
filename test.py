@@ -1,35 +1,30 @@
+from datetime import datetime
+from typing import List, Dict, Any, Optional
 from qdrant_client import QdrantClient
 from qdrant_client.http import models
 from sentence_transformers import SentenceTransformer
-from typing import List, Dict, Any, Optional
+import numpy as np
+from collections import Counter
 import uuid
 
-class LocalHybridSearch:
+class ProfessorResearchProfile:
     def __init__(self, 
-                 collection_name: str,
+                 collection_name: str = "professor_profiles",
                  embedding_model: str = 'all-MiniLM-L6-v2',
-                 location: str = ":memory:"):  # Use ":memory:" for in-memory or path for persistence
+                 location: str = ":memory:"):
         """
-        Initialize hybrid search with local vector database
-        
-        Args:
-            collection_name: Name of the collection to store vectors
-            embedding_model: Name of the sentence-transformer model to use
-            location: ":memory:" for in-memory DB or path to store the database
+        Initialize the professor research profile system
         """
-        # Initialize Qdrant client (locally, no server needed)
         self.client = QdrantClient(path=location)
         self.collection_name = collection_name
-        
-        # Initialize the embedding model
         self.model = SentenceTransformer(embedding_model)
         self.embedding_dim = self.model.get_sentence_embedding_dimension()
         
-        # Create collection if it doesn't exist
+        # Create collection
         self._create_collection()
         
     def _create_collection(self):
-        """Create a new collection with necessary configuration"""
+        """Create collection for professor profiles"""
         try:
             self.client.create_collection(
                 collection_name=self.collection_name,
@@ -39,214 +34,226 @@ class LocalHybridSearch:
                 )
             )
         except Exception as e:
-            # Collection might already exist
             pass
 
-    def insert_documents(self, documents: List[Dict[str, str]]):
+    def extract_paper_features(self, paper_text: str) -> Dict[str, str]:
         """
-        Insert documents with their keywords and summaries
+        Abstract method to extract features from a paper
+        Override this method with your actual implementation
+        """
+        # This is a placeholder - implement your actual extraction logic
+        pass
+
+    def add_professor(self, 
+                     name: str,
+                     papers: List[Dict[str, str]],
+                     department: str = None,
+                     university: str = None):
+        """
+        Add a professor and their research papers to the database
         
         Args:
-            documents: List of dictionaries containing:
-                - 'text': original text
-                - 'keywords': keywords
-                - 'summary': text summary
+            name: Professor's name
+            papers: List of dictionaries containing paper information:
+                   {'title': str, 'keywords': str, 'summary': str}
+            department: Professor's department (optional)
+            university: Professor's university (optional)
         """
-        points = []
-        
-        for doc in documents:
-            # Generate embedding from combined text
-            combined_text = f"{doc['summary']} {doc['keywords']}"
-            embedding = self.model.encode(combined_text).tolist()
-            
-            # Create point
-            points.append(models.PointStruct(
-                id=str(uuid.uuid4()),
-                vector=embedding,
-                payload={
-                    'keywords': doc['keywords'],
-                    'summary': doc['summary'],
-                    'text': doc.get('text', ''),  # Original text is optional
-                    # Create keyword list for better filtering
-                    'keyword_list': [k.strip() for k in doc['keywords'].split(',')]
-                }
-            ))
-        
-        # Insert in batch
+        # Combine all papers' keywords and summaries
+        all_keywords = []
+        all_summaries = []
+        for paper in papers:
+            all_keywords.extend([k.strip() for k in paper['keywords'].split(',')])
+            all_summaries.append(paper['summary'])
+
+        # Get frequency of keywords
+        keyword_freq = Counter(all_keywords)
+        top_keywords = [k for k, _ in keyword_freq.most_common(20)]
+
+        # Create combined text for embedding
+        combined_text = f"{' '.join(top_keywords)} {' '.join(all_summaries)}"
+        embedding = self.model.encode(combined_text).tolist()
+
+        # Create professor profile
+        point = models.PointStruct(
+            id=str(uuid.uuid4()),
+            vector=embedding,
+            payload={
+                'name': name,
+                'department': department,
+                'university': university,
+                'papers': papers,
+                'top_keywords': top_keywords,
+                'keyword_frequencies': dict(keyword_freq),
+                'paper_count': len(papers),
+                'last_updated': datetime.utcnow().isoformat()
+            }
+        )
+
+        # Insert into database
         self.client.upsert(
             collection_name=self.collection_name,
-            points=points
+            points=[point]
         )
 
-    def hybrid_search(self,
-                     query_text: str,
-                     keyword_filter: Optional[str] = None,
-                     limit: int = 10) -> List[Dict[str, Any]]:
+    def find_similar_professors(self,
+                              professor_name: str,
+                              limit: int = 5,
+                              min_similarity: float = 0.6) -> List[Dict[str, Any]]:
         """
-        Perform hybrid search combining vector similarity and keyword filtering
+        Find professors with similar research interests
         
         Args:
-            query_text: Search query text
-            keyword_filter: Optional keyword to filter results
-            limit: Maximum number of results to return
+            professor_name: Name of the professor to find similar profiles for
+            limit: Maximum number of similar professors to return
+            min_similarity: Minimum similarity score threshold
         """
-        # Generate query embedding
-        query_vector = self.model.encode(query_text).tolist()
-        
-        # Prepare filter
-        filter_query = None
-        if keyword_filter:
-            filter_query = models.Filter(
-                must=[
-                    models.FieldCondition(
-                        key="keyword_list",
-                        match=models.MatchText(
-                            text=keyword_filter
-                        )
-                    )
-                ]
-            )
-        
-        # Perform search
-        search_results = self.client.search(
-            collection_name=self.collection_name,
-            query_vector=query_vector,
-            query_filter=filter_query,
-            limit=limit
+        # First, get the professor's profile
+        filter_query = models.Filter(
+            must=[
+                models.FieldCondition(
+                    key="name",
+                    match=models.MatchText(text=professor_name)
+                )
+            ]
         )
         
-        # Format results
-        results = []
-        for hit in search_results:
-            results.append({
-                'id': hit.id,
-                'score': hit.score,
-                'keywords': hit.payload['keywords'],
-                'summary': hit.payload['summary'],
-                'text': hit.payload.get('text', '')
-            })
-            
-        return results
-
-    def delete_collection(self):
-        """Delete the collection"""
-        self.client.delete_collection(self.collection_name)
-
-# Advanced features class that inherits from LocalHybridSearch
-class AdvancedHybridSearch(LocalHybridSearch):
-    def semantic_keyword_search(self, 
-                              query_text: str, 
-                              min_score: float = 0.7) -> List[Dict[str, Any]]:
-        """
-        Perform semantic search with keyword boosting
-        """
-        query_vector = self.model.encode(query_text).tolist()
-        
-        # Search with scoring
-        results = self.client.search(
+        prof_results = self.client.scroll(
             collection_name=self.collection_name,
-            query_vector=query_vector,
-            limit=20,  # Get more results initially for filtering
-            score_threshold=min_score
+            scroll_filter=filter_query,
+            limit=1
+        )[0]
+        
+        if not prof_results:
+            raise ValueError(f"Professor {professor_name} not found in database")
+            
+        prof_vector = self.client.retrieve(
+            collection_name=self.collection_name,
+            ids=[prof_results[0].id]
+        )[0].vector
+        
+        # Find similar professors
+        similar_profs = self.client.search(
+            collection_name=self.collection_name,
+            query_vector=prof_vector,
+            query_filter=models.Filter(
+                must_not=[
+                    models.FieldCondition(
+                        key="name",
+                        match=models.MatchText(text=professor_name)
+                    )
+                ]
+            ),
+            limit=limit,
+            score_threshold=min_similarity
         )
         
         return [
             {
-                'id': hit.id,
-                'score': hit.score,
-                'keywords': hit.payload['keywords'],
-                'summary': hit.payload['summary']
+                'name': hit.payload['name'],
+                'department': hit.payload.get('department'),
+                'university': hit.payload.get('university'),
+                'similarity_score': hit.score,
+                'shared_keywords': set(hit.payload['top_keywords']) & 
+                                 set(prof_results[0].payload['top_keywords']),
+                'paper_count': hit.payload['paper_count'],
+                'top_keywords': hit.payload['top_keywords'][:5]  # Top 5 keywords
             }
-            for hit in results
+            for hit in similar_profs
         ]
 
-    def keyword_faceted_search(self, 
-                             keywords: List[str], 
-                             limit: int = 10) -> Dict[str, List[Dict[str, Any]]]:
-        """
-        Perform faceted search based on keywords
-        """
-        results = {}
-        
-        for keyword in keywords:
-            filter_query = models.Filter(
-                must=[
-                    models.FieldCondition(
-                        key="keyword_list",
-                        match=models.MatchText(text=keyword)
-                    )
-                ]
-            )
-            
-            hits = self.client.scroll(
-                collection_name=self.collection_name,
-                scroll_filter=filter_query,
-                limit=limit
-            )[0]
-            
-            results[keyword] = [
-                {
-                    'id': hit.id,
-                    'keywords': hit.payload['keywords'],
-                    'summary': hit.payload['summary']
-                }
-                for hit in hits
+    def get_professor_stats(self, name: str) -> Dict[str, Any]:
+        """Get detailed statistics about a professor's research profile"""
+        filter_query = models.Filter(
+            must=[
+                models.FieldCondition(
+                    key="name",
+                    match=models.MatchText(text=name)
+                )
             ]
+        )
+        
+        results = self.client.scroll(
+            collection_name=self.collection_name,
+            scroll_filter=filter_query,
+            limit=1
+        )[0]
+        
+        if not results:
+            raise ValueError(f"Professor {name} not found in database")
             
-        return results
+        prof = results[0].payload
+        
+        return {
+            'name': prof['name'],
+            'department': prof.get('department'),
+            'university': prof.get('university'),
+            'paper_count': prof['paper_count'],
+            'top_keywords': prof['top_keywords'][:10],  # Top 10 keywords
+            'keyword_frequencies': prof['keyword_frequencies'],
+            'last_updated': prof['last_updated']
+        }
 
 # Usage Example
 if __name__ == "__main__":
-    # Initialize with in-memory storage
-    search_engine = LocalHybridSearch(
-        collection_name="documents",
-        location=":memory:"  # For persistence, use a path like "./local_db"
-    )
+    # Initialize the system
+    profile_system = ProfessorResearchProfile(location="./professor_db")
     
-    # Example documents
-    documents = [
+    # Example: Adding professors with their papers
+    prof1_papers = [
         {
-            'text': 'Comprehensive guide to machine learning algorithms...',
-            'keywords': 'machine learning, AI, algorithms, neural networks',
-            'summary': 'An in-depth overview of various machine learning algorithms and their applications.'
+            'title': 'Deep Learning Applications in Computer Vision',
+            'keywords': 'deep learning, computer vision, CNN, object detection',
+            'summary': 'A comprehensive study of deep learning applications in computer vision tasks.'
         },
         {
-            'text': 'Data visualization techniques for big data...',
-            'keywords': 'data visualization, matplotlib, plotting, analytics',
-            'summary': 'Exploring different techniques for visualizing large datasets effectively.'
+            'title': 'Neural Network Architectures',
+            'keywords': 'neural networks, deep learning, architecture design',
+            'summary': 'Analysis of various neural network architectures and their applications.'
         }
     ]
     
-    # Insert documents
-    search_engine.insert_documents(documents)
+    prof2_papers = [
+        {
+            'title': 'Computer Vision for Autonomous Systems',
+            'keywords': 'computer vision, robotics, autonomous systems',
+            'summary': 'Exploring computer vision techniques in autonomous systems.'
+        }
+    ]
     
-    # Basic hybrid search
-    results = search_engine.hybrid_search(
-        query_text="machine learning visualization",
-        keyword_filter="visualization",
+    # Add professors
+    profile_system.add_professor(
+        name="Dr. Smith",
+        papers=prof1_papers,
+        department="Computer Science",
+        university="Tech University"
+    )
+    
+    profile_system.add_professor(
+        name="Dr. Johnson",
+        papers=prof2_papers,
+        department="Robotics",
+        university="Innovation University"
+    )
+    
+    # Find similar professors
+    similar_profs = profile_system.find_similar_professors(
+        professor_name="Dr. Smith",
         limit=5
     )
     
     # Print results
-    for result in results:
-        print(f"\nScore: {result['score']:.4f}")
-        print(f"Keywords: {result['keywords']}")
-        print(f"Summary: {result['summary']}")
-    
-    # Advanced usage
-    advanced_search = AdvancedHybridSearch(
-        collection_name="advanced_documents",
-        location=":memory:"
-    )
-    
-    # Semantic keyword search
-    semantic_results = advanced_search.semantic_keyword_search(
-        query_text="deep learning applications",
-        min_score=0.7
-    )
-    
-    # Faceted search by keywords
-    faceted_results = advanced_search.keyword_faceted_search(
-        keywords=["machine learning", "visualization"],
-        limit=5
-    )
+    print("\nSimilar Professors to Dr. Smith:")
+    for prof in similar_profs:
+        print(f"\nName: {prof['name']}")
+        print(f"Department: {prof['department']}")
+        print(f"University: {prof['university']}")
+        print(f"Similarity Score: {prof['similarity_score']:.2f}")
+        print(f"Shared Keywords: {', '.join(prof['shared_keywords'])}")
+        print(f"Top Keywords: {', '.join(prof['top_keywords'])}")
+
+    # Get professor statistics
+    stats = profile_system.get_professor_stats("Dr. Smith")
+    print(f"\nStatistics for {stats['name']}:")
+    print(f"Papers: {stats['paper_count']}")
+    print(f"Top Keywords: {', '.join(stats['top_keywords'])}")
