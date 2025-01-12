@@ -51,7 +51,8 @@ class AuthorDocumentProcessor:
             # Extract keywords from sections
             introduction_keywords = [i[0] for i in self.key_extractor.extract_keywords(sections[0])]
             conclusion_keywords = [i[0] for i in self.key_extractor.extract_keywords(sections[1])]
-            
+            print(introduction_keywords)
+            print(conclusion_keywords)
 
 
             # Get expanded keywords
