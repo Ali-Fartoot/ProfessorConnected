@@ -47,7 +47,6 @@ class AuthorDocumentProcessor:
         """
         Process text using LLM agents for summarization and keyword extraction.
         """
-        # try:
         # Extract keywords from sections
         introduction_keywords = [i[0] for i in self.key_extractor.extract_keywords(sections[0])]
         conclusion_keywords = [i[0] for i in self.key_extractor.extract_keywords(sections[1])]
@@ -64,9 +63,18 @@ class AuthorDocumentProcessor:
             (expanded_conclusion if isinstance(expanded_conclusion, list) else [expanded_conclusion])
         )
         
-        # Remove duplicates and convert to string
-        print(all_keywords)
-        unique_keywords = list(set(filter(None, all_keywords)))
+        # Flatten the list and remove None values
+        flattened_keywords = []
+        for item in all_keywords:
+            if item is not None:
+                if isinstance(item, list):
+                    flattened_keywords.extend(item)
+                else:
+                    flattened_keywords.append(item)
+        
+        # Remove duplicates while preserving order
+        unique_keywords = list(dict.fromkeys(flattened_keywords))
+        
         return {
             "summaries": self.summarizer.infer("\n".join(sections)),
             "keywords": ", ".join(unique_keywords)
