@@ -5,7 +5,6 @@ import time
 
 start = time.time()
 
-document_processor = AuthorDocumentProcessor()
 name = "Majid Nili Ahmadabadi"
 
 os.makedirs("data", exist_ok=True)
@@ -14,6 +13,8 @@ if not os.path.exists(os.path.join("data", name)):
 else:
     print("The author papers already exists")
 
+
+document_processor = AuthorDocumentProcessor()
 if not os.path.exists(os.path.join("data", name, name + ".json")):
     document_processor(name)
 else:

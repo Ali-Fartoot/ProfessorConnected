@@ -47,38 +47,37 @@ class AuthorDocumentProcessor:
         """
         Process text using LLM agents for summarization and keyword extraction.
         """
-        try:
-            # Extract keywords from sections
-            introduction_keywords = [i[0] for i in self.key_extractor.extract_keywords(sections[0])]
-            conclusion_keywords = [i[0] for i in self.key_extractor.extract_keywords(sections[1])]
-            
-            # Get expanded keywords
-            expanded_intro = self.keywords_expander.infer(sections[0])
-            expanded_conclusion = self.keywords_expander.infer(sections[1])
-            
-            # Combine all keywords
-            all_keywords = (
-                introduction_keywords +
-                conclusion_keywords +
-                (expanded_intro if isinstance(expanded_intro, list) else [expanded_intro]) +
-                (expanded_conclusion if isinstance(expanded_conclusion, list) else [expanded_conclusion])
-            )
-            
-            # Remove duplicates and convert to string
-            unique_keywords = list(set(filter(None, all_keywords)))
-            print(unique_keywords)
-            
-            return {
-                "summaries": self.summarizer.infer("\n".join(sections)),
-                "keywords": ", ".join(unique_keywords)
-            }
+        # try:
+        # Extract keywords from sections
+        introduction_keywords = [i[0] for i in self.key_extractor.extract_keywords(sections[0])]
+        conclusion_keywords = [i[0] for i in self.key_extractor.extract_keywords(sections[1])]
         
-        except Exception as e:
-            print(f"Error in LLM processing: {e}")
-            return {
-                "summaries": "",
-                "keywords": ""
-            }
+        # Get expanded keywords
+        expanded_intro = self.keywords_expander.infer(sections[0])
+        expanded_conclusion = self.keywords_expander.infer(sections[1])
+        
+        # Combine all keywords
+        all_keywords = (
+            introduction_keywords +
+            conclusion_keywords +
+            (expanded_intro if isinstance(expanded_intro, list) else [expanded_intro]) +
+            (expanded_conclusion if isinstance(expanded_conclusion, list) else [expanded_conclusion])
+        )
+        
+        # Remove duplicates and convert to string
+        unique_keywords = list(set(filter(None, all_keywords)))
+        print(unique_keywords)
+        return {
+            "summaries": self.summarizer.infer("\n".join(sections)),
+            "keywords": ", ".join(unique_keywords)
+        }
+        
+        # except Exception as e:
+        #     print(f"Error in LLM processing: {e}")
+        #     return {
+        #         "summaries": "",
+        #         "keywords": ""
+        #     }
     def _pdf_to_json(self, file_path: str) -> dict:
         """
         Convert PDF to structured data.
@@ -89,37 +88,37 @@ class AuthorDocumentProcessor:
         Returns:
             dict: Structured data from PDF including traditional and LLM-based analysis
         """
-        try:
+        # try:
             # Step 1: Convert the document to markdown
-            result = self.document_converter.convert(file_path)
-            markdown_text = result.document.export_to_markdown()
-            
-            # Step 2: Extract sections from the markdown text
-            selected_text = self._section_chunker(text=markdown_text)
-            
-            # Step 3: Extract keywords using traditional methods
-            overall_keywords = self.keyword_extractor.extract_keywords(markdown_text)
-            section_keywords = self.keyword_extractor.extract_keywords('\n'.join(selected_text))
-            
-            # Step 4: Perform LLM processing on the text
-            llm_results = self._process_text_with_llm(markdown_text, selected_text)
-            
-            # Step 5: Combine all keywords into a unified string
-            combined_keywords = (
-                ", ".join([kw[0] for kw in overall_keywords]) + ", " +
-                ", ".join([kw[0] for kw in section_keywords]) + ", " +
-                llm_results["keywords"]
-            )
-            
-            # Step 6: Return the results in a structured dictionary
-            return {
-                "summary": llm_results["summaries"],  # Extracted sections of the document
-                "Keywords": combined_keywords,  # Combined keywords from all methods
-            }
+        result = self.document_converter.convert(file_path)
+        markdown_text = result.document.export_to_markdown()
+        
+        # Step 2: Extract sections from the markdown text
+        selected_text = self._section_chunker(text=markdown_text)
+        
+        # Step 3: Extract keywords using traditional methods
+        overall_keywords = self.keyword_extractor.extract_keywords(markdown_text)
+        section_keywords = self.keyword_extractor.extract_keywords('\n'.join(selected_text))
+        
+        # Step 4: Perform LLM processing on the text
+        llm_results = self._process_text_with_llm(markdown_text, selected_text)
+        
+        # Step 5: Combine all keywords into a unified string
+        combined_keywords = (
+            ", ".join([kw[0] for kw in overall_keywords]) + ", " +
+            ", ".join([kw[0] for kw in section_keywords]) + ", " +
+            llm_results["keywords"]
+        )
+        
+        # Step 6: Return the results in a structured dictionary
+        return {
+            "summary": llm_results["summaries"],  # Extracted sections of the document
+            "Keywords": combined_keywords,  # Combined keywords from all methods
+        }
     
-        except Exception as e:
-            print(f"Error processing PDF {file_path}: {str(e)}")
-            return None
+        # except Exception as e:
+        #     print(f"Error processing PDF {file_path}: {str(e)}")
+        #     return None
 
     def __call__(self, author_name: str) -> None:
         """
