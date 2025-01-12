@@ -101,7 +101,7 @@ class ProfessorResearchProfile:
     def find_similar_professors(self,
                               professor_name: str,
                               limit: int = 5,
-                              min_similarity: float = 0.6) -> List[Dict[str, Any]]:
+                              min_similarity: float = 0.3) -> List[Dict[str, Any]]:
         """
         Find professors with similar research interests
         """
