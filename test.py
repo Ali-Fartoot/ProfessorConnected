@@ -86,7 +86,6 @@ class ProfessorResearchProfile:
                 'top_keywords': top_keywords,
                 'keyword_frequencies': dict(keyword_freq),
                 'paper_count': len(papers),
-                'last_updated': datetime.now(timezone.utc).isoformat()  # Updated line
             }
         )
 
