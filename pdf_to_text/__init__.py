@@ -68,7 +68,11 @@ class AuthorDocumentProcessor:
                     "introduction": introduction_keywords,
                     "conclusion": conclusion_keywords
                 },
-                "expanded_keywords":{
+                "traditional_expanded_keywords": {
+                    "introduction": self.keywords_expander.infer(sections[0]),
+                    "conclusion": self.keywords_expander.infer(sections[1])
+                },
+                "llm_expanded_keywords":{
                     "introduction": self.keywords_expander.infer(sections[0]),
                     "conclusion": self.keywords_expander.infer(sections[1])
                 }

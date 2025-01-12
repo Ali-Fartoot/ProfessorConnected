@@ -207,7 +207,7 @@ class KeyextractorLLM(LLMAgent):
         super().__init__(message)
         self.key_extractor = KeyLLM(keybert_openai(self.client))
 
-    def infer(self, text: str, temperature=0.9, max_token=500, n=1, stop=None):
+    def infer(self, text: str):
         # Use the KeyLLM instance to extract keywords
         keywords = self.key_extractor.extract_keywords(text)
         return keywords
