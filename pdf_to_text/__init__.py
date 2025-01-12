@@ -51,18 +51,14 @@ class AuthorDocumentProcessor:
             # Extract keywords from sections
             introduction_keywords = [i[0] for i in self.key_extractor.extract_keywords(sections[0])]
             conclusion_keywords = [i[0] for i in self.key_extractor.extract_keywords(sections[1])]
-            print(introduction_keywords)
-            print(conclusion_keywords)
-
-
             # Get expanded keywords
             expanded_intro = self.keywords_expander.infer(sections[0])
             expanded_conclusion = self.keywords_expander.infer(sections[1])
             
             # Combine all keywords
             all_keywords = (
-                [i[0] for i in self.key_extractor.extract_keywords(introduction_keywords)] +
-                [i[0] for i in self.key_extractor.extract_keywords(conclusion_keywords)] +
+                [i[0] for i in self.key_extractor.extract_keywords(" ".join(introduction_keywords))]+
+                [i[0] for i in self.key_extractor.extract_keywords(" ".join(conclusion_keywords))]+
                 (expanded_intro if isinstance(expanded_intro, list) else [expanded_intro]) +
                 (expanded_conclusion if isinstance(expanded_conclusion, list) else [expanded_conclusion])
             )
