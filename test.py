@@ -132,6 +132,9 @@ class ProfessorResearchProfile:
             ids=[prof_results[0].id]
         )[0].vector
         
+        if prof_vector is None:
+            raise ValueError(f"Vector for professor {professor_name} not found")
+        
         # Find similar professors
         similar_profs = self.client.search(
             collection_name=self.collection_name,
