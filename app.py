@@ -6,7 +6,8 @@ import time
 start = time.time()
 
 document_processor = AuthorDocumentProcessor()
-name = input()
+name = "Majid Nili Ahmadabadi"
+
 os.makedirs("data", exist_ok=True)
 if not os.path.exists(os.path.join("data", name)):
     crawl(name, number_of_articles=2)

@@ -69,8 +69,8 @@ class AuthorDocumentProcessor:
                     "conclusion": conclusion_keywords
                 },
                 "expanded_keywords":{
-                    "introduction": self.keywords_expander.infer(introduction_keywords),
-                    "conclusion": self.keywords_expander.infer(conclusion_keywords)
+                    "introduction": self.keywords_expander.infer(sections[0]),
+                    "conclusion": self.keywords_expander.infer(sections[1])
                 }
                 
             }
