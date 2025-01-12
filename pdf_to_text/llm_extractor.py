@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 from openai import OpenAI
 
-
 class LLMAgent(ABC):
     """
     Abstract base class for LLM agents that handle image processing and inference.
@@ -30,51 +29,6 @@ class LLMAgent(ABC):
         """
         pass
 
-class KeyExtractorAgent(LLMAgent):
-    def __init__(self, message: list[dict] = None):
-        super().__init__(message)
-        self.message_template = message or [
-            {
-                "role": "system",
-                "content": """You are a specialized keyword extraction assistant. Your task is to extract relevant keywords from the given text while following these guidelines:
-                return keywords as list like python.
-                """
-            },
-            {
-                "role": "user",
-                "content": None
-    
-            }
-        ]
-
-    def infer(self, 
-              text: str, 
-              temperature: float = 0.1, 
-              max_token: int = 20000, 
-              n: int = 1, 
-              stop: str = None) -> list[str]:
-
-        # Update the message template with the input text
-        self.message_template[1]["content"] = str(text)
-        response = self.client.chat.completions.create(
-            model="local-model",
-            messages=self.message_template,
-            temperature=temperature,
-            max_tokens=max_token,
-            n=n,
-            stop=stop    
-        )
-        return response.choices[0].message.content
-    
-        # try:
-        #     keywords = eval(response.choices[0].message.content)
-        #     if not isinstance(keywords, list):
-        #         return []
-        #     return [str(k).lower() for k in keywords if isinstance(k, str)]
-        # except:
-        #     raise TypeError(f"The Parser for {self.__class__.__name__} failed. Agent didn't return as a list!")
-
-
 
 class SummarizerAgent(LLMAgent):
     def __init__(self, message: list[dict] = None):
@@ -83,7 +37,7 @@ class SummarizerAgent(LLMAgent):
             {
                 "role": "system",
                 "content": """You are a assitant text summarization assistant. Your task is to create concise, 
-                accurate summaries. FYI the given text is from papers."""
+                accurate summaries. Please Keep the summary length to a minimum but point at techniques."""
             },
             {
                 "role": "user",
@@ -94,7 +48,7 @@ class SummarizerAgent(LLMAgent):
     def infer(self, 
               text: str, 
               temperature: float = 0.6, 
-              max_token: int = 20000, 
+              max_token: int = 8096, 
               n: int = 1, 
               stop: str = None) -> str:
 
@@ -109,10 +63,72 @@ class SummarizerAgent(LLMAgent):
         )
         return response.choices[0].message.content
 
-        # try:
-        #     summary = response.choices[0].message.content
-        #     if not isinstance(summary, str):
-        #         raise TypeError("Summary must be a string")
-        #     return summary.strip()
-        # except Exception as e:
-        #     raise TypeError(f"The Parser for {self.__class__.__name__} failed: {str(e)}")
+
+
+class SummarizerAgent(LLMAgent):
+    def __init__(self, message: list[dict] = None):
+        super().__init__(message)
+        self.message_template = message or [
+            {
+                "role": "system",
+                "content": """You are a assitant text summarization assistant. Your task is to create concise, 
+                accurate summaries. Please Keep the summary length to a minimum but point at techniques."""
+            },
+            {
+                "role": "user",
+                "content": None
+            }
+        ]
+
+    def infer(self, 
+              text: str, 
+              temperature: float = 0.6, 
+              max_token: int = 8096, 
+              n: int = 1, 
+              stop: str = None) -> str:
+
+        self.message_template[1]["content"]= str(text)
+        response = self.client.chat.completions.create(
+            model="local-model",
+            messages=self.message_template,
+            temperature=temperature,
+            max_tokens=max_token,
+            n=n,
+            stop=stop    
+        )
+        return response.choices[0].message.content
+
+
+class ExpandKeywordsAgent(LLMAgent):
+    def __init__(self, message: list[dict] = None):
+        super().__init__(message)
+        self.message_template = message or [
+            {
+                "role": "system",
+                "content": "I gave a bunch of keywords. Can you expand on them by Merging or lingual and generate new keywords?"
+
+            },
+            {
+             "role": "user",
+             "content":None
+            }
+        ]
+    
+    def infer(self, 
+              keywords: list, 
+              temperature: float = 0.6, 
+              max_token: int = 8091, 
+              n: int = 1, 
+              stop: str = None) -> str:
+        
+        keyword_str = "\n".join([f"{i+1}. {keyword}" for i, keyword in enumerate(keywords)])
+        self.message_template[1]["content"]= keyword_str
+        response = self.client.chat.completions.create(
+            model="local-model",
+            messages=self.message_template,
+            temperature=temperature,
+            max_tokens=max_token,
+            n=n,
+            stop=stop    
+        )
+        return response.choices[0].message.content

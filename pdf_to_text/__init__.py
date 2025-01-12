@@ -2,7 +2,9 @@ from docling.document_converter import DocumentConverter
 import yake
 import os
 import json
-from .llm_extractor import SummarizerAgent, KeyExtractorAgent
+from .llm_extractor import SummarizerAgent, ExpandKeywordsAgent
+from keybert import KeyBERT
+
 
 class AuthorDocumentProcessor:
     def __init__(self, base_data_path='data'):
@@ -18,7 +20,8 @@ class AuthorDocumentProcessor:
         
         # Initialize LLM agents
         self.summarizer = SummarizerAgent()
-        self.key_extractor = KeyExtractorAgent()
+        self.key_extractor = KeyBERT()
+        self.keywords_expander = ExpandKeywordsAgent()
 
     def _section_chunker(self, text: str, symbol: str = "## ", 
                         sections=['Introduction', "Conclusion"]) -> list:
@@ -54,16 +57,22 @@ class AuthorDocumentProcessor:
         """
         try:
 
-
+            introduction_keyword = self.key_extractor.extract_keywords(sections[0])
+            conclusion_keywords = self.key_extractor.extract_keywords(sections[0])
 
             llm_results = {
                 "summaries": {
                     "sections": self.summarizer.infer("\n".join(sections))
                 },
                 "keywords": {
-                    "introduction": self.key_extractor.infer(sections[0]),
-                    "conclusion": self.key_extractor.infer(sections[1])
+                    "introduction": introduction_keyword,
+                    "conclusion": conclusion_keywords
+                },
+                "expanded_keywords":{
+                    "introduction": self.keywords_expander.expand_keywords(introduction_keyword),
+                    "conclusion": self.keywords_expander.expand_keywords(conclusion_keywords)
                 }
+                
             }
             return llm_results
         
@@ -98,6 +107,7 @@ class AuthorDocumentProcessor:
             
             # LLM processing
             llm_results = self._process_text_with_llm(markdown_text, selected_text)
+            
             
             return {
                 "text": selected_text,
