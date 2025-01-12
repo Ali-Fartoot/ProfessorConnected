@@ -96,78 +96,96 @@ class ProfessorResearchProfile:
         )
 
     def find_similar_professors(self,
-                                professor_name: str,
-                                limit: int = 5,
-                                min_similarity: float = 0.6) -> List[Dict[str, Any]]:
-        """
-        Find professors with similar research interests
-        
-        Args:
-            professor_name: Name of the professor to find similar profiles for
-            limit: Maximum number of similar professors to return
-            min_similarity: Minimum similarity score threshold
-        """
-        # First, get the professor's profile
-        filter_query = models.Filter(
+                              professor_name: str,
+                              limit: int = 5,
+                              min_similarity: float = 0.6) -> List[Dict[str, Any]]:
+      """
+      Find professors with similar research interests
+      """
+      # First, get the professor's profile
+      filter_query = models.Filter(
             must=[
-                models.FieldCondition(
-                    key="name",
-                    match=models.MatchText(text=professor_name)
-                )
+                  models.FieldCondition(
+                  key="name",
+                  match=models.MatchText(text=professor_name)
+                  )
             ]
-        )
-        
-        prof_results = self.client.scroll(
+      )
+      
+      # Get professor records
+      prof_results = self.client.scroll(
             collection_name=self.collection_name,
             scroll_filter=filter_query,
-            limit=1
-        )[0]
-        
-        if not prof_results:
+            limit=1,
+            with_vectors=True  # Add this parameter to include vectors
+      )[0]
+      
+      if not prof_results:
             raise ValueError(f"Professor {professor_name} not found in database")
-        
-        print(f"Professor {professor_name} found: {prof_results[0].payload}")  # Debugging line
-
-        prof_vector = self.client.retrieve(
-            collection_name=self.collection_name,
-            ids=[prof_results[0].id]
-        )[0].vector
-        
-        if prof_vector is None:
+      
+      # Get the vector directly from the scroll results
+      prof_vector = prof_results[0].vector
+      
+      if prof_vector is None:
             raise ValueError(f"Vector for professor {professor_name} not found")
-        
-        print(f"Vector for Professor {professor_name}: {prof_vector}")  # Debugging line
-        
-        # Find similar professors
-        similar_profs = self.client.search(
+      
+      # Find similar professors
+      similar_profs = self.client.search(
             collection_name=self.collection_name,
             query_vector=prof_vector,
             query_filter=models.Filter(
-                must_not=[
-                    models.FieldCondition(
+                  must_not=[
+                  models.FieldCondition(
                         key="name",
                         match=models.MatchText(text=professor_name)
-                    )
-                ]
+                  )
+                  ]
             ),
             limit=limit,
             score_threshold=min_similarity
-        )
-        
-        return [
+      )
+      
+      return [
             {
-                'name': hit.payload['name'],
-                'department': hit.payload.get('department'),
-                'university': hit.payload.get('university'),
-                'similarity_score': hit.score,
-                'shared_keywords': set(hit.payload['top_keywords']) & 
-                                 set(prof_results[0].payload['top_keywords']),
-                'paper_count': hit.payload['paper_count'],
-                'top_keywords': hit.payload['top_keywords'][:5]  # Top 5 keywords
+                  'name': hit.payload['name'],
+                  'department': hit.payload.get('department'),
+                  'university': hit.payload.get('university'),
+                  'similarity_score': hit.score,
+                  'shared_keywords': set(hit.payload['top_keywords']) & 
+                              set(prof_results[0].payload['top_keywords']),
+                  'paper_count': hit.payload['paper_count'],
+                  'top_keywords': hit.payload['top_keywords'][:5]
             }
             for hit in similar_profs
-        ]
-
+      ]
+    def get_professor_stats(self, professor_name: str) -> Dict[str, Any]:
+      """
+      Get statistics for a specific professor
+      """
+      filter_query = models.Filter(
+            must=[
+                  models.FieldCondition(
+                  key="name",
+                  match=models.MatchText(text=professor_name)
+                  )
+            ]
+      )
+      
+      prof_results = self.client.scroll(
+            collection_name=self.collection_name,
+            scroll_filter=filter_query,
+            limit=1
+      )[0]
+      
+      if not prof_results:
+            raise ValueError(f"Professor {professor_name} not found in database")
+            
+      prof_data = prof_results[0].payload
+      return {
+            'name': prof_data['name'],
+            'paper_count': prof_data['paper_count'],
+            'top_keywords': prof_data['top_keywords']
+      }
 # Usage Example
 if __name__ == "__main__":
     # Initialize the system
