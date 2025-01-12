@@ -2,7 +2,7 @@ from docling.document_converter import DocumentConverter
 import yake
 import os
 import json
-from .llm_extractor import SummarizerAgent, KeyextractorLLM
+from .llm_extractor import SummarizerAgent, KeyExtractorLLM
 from keybert import KeyBERT
 
 class AuthorDocumentProcessor:
@@ -20,7 +20,7 @@ class AuthorDocumentProcessor:
         # Initialize LLM agents
         self.summarizer = SummarizerAgent()
         self.key_extractor = KeyBERT()
-        self.keywords_expander = KeyextractorLLM()
+        self.keywords_expander = KeyExtractorLLM()
 
     def _section_chunker(self, text: str, symbol: str = "## ", 
                         sections=['Introduction', "Conclusion", "Discussion", "Future Works"]) -> list:
@@ -52,14 +52,16 @@ class AuthorDocumentProcessor:
             introduction_keywords = [i[0] for i in self.key_extractor.extract_keywords(sections[0])]
             conclusion_keywords = [i[0] for i in self.key_extractor.extract_keywords(sections[1])]
             
+
+
             # Get expanded keywords
             expanded_intro = self.keywords_expander.infer(sections[0])
             expanded_conclusion = self.keywords_expander.infer(sections[1])
             
             # Combine all keywords
             all_keywords = (
-                introduction_keywords +
-                conclusion_keywords +
+                [i[0] for i in self.key_extractor.extract_keywords(introduction_keywords)] +
+                [i[0] for i in self.key_extractor.extract_keywords(conclusion_keywords)] +
                 (expanded_intro if isinstance(expanded_intro, list) else [expanded_intro]) +
                 (expanded_conclusion if isinstance(expanded_conclusion, list) else [expanded_conclusion])
             )

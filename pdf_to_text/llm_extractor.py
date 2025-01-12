@@ -51,7 +51,7 @@ class SummarizerAgent(LLMAgent):
               temperature: float = 0.7, 
               stop: str = None) -> str:
 
-        self.message_template[1]["content"] = f'''Your task is to create concise, accurate summaries. Please keep the summary length to a minimum but point at techniques.
+        self.message_template[1]["content"] = f'''Your task is to create concise, accurate summaries. Please point at techniques by considering keywords. The summerization should have two part introduction and conclusion. but don't mention that by exact world
                                                 The text: {text}, The summarization:'''
         response = self.client.chat.completions.create(
             model="local-model",
@@ -62,7 +62,7 @@ class SummarizerAgent(LLMAgent):
         return response.choices[0].message.content.strip()
 
 
-class KeyextractorLLM(LLMAgent):
+class KeyExtractorLLM(LLMAgent):
     def __init__(self, message=None):
         super().__init__(message)
         self.key_extractor = KeyLLM(keybert_openai(self.client))
