@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from openai import OpenAI
-from keybert.llm import OpenAI
+from keybert.llm import OpenAI as keybert_openai
 from keybert import KeyLLM
 
 class LLMAgent(ABC):
@@ -103,4 +103,4 @@ class SummarizerAgent(LLMAgent):
 class KeyextractorLLM(LLMAgent):
     def __init__(self, message=None):
         super().__init__(message)
-        return KeyLLM(self.client)
+        return keybert_openai(KeyLLM(self.client))
