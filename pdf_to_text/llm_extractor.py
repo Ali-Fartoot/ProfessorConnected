@@ -38,8 +38,7 @@ class SummarizerAgent(LLMAgent):
         self.message_template = message or [
             {
                 "role": "system",
-                "content": """You are a assitant text summarization assistant. Your task is to create concise, 
-                accurate summaries. Please Keep the summary length to a minimum but point at techniques."""
+                "content": """You are an assistant text summarization assistant."""
             },
             {
                 "role": "user",
@@ -49,21 +48,18 @@ class SummarizerAgent(LLMAgent):
 
     def infer(self, 
               text: str, 
-              temperature: float = 0.6, 
-              max_token: int = 8096, 
-              n: int = 1, 
+              temperature: float = 0.7, 
               stop: str = None) -> str:
 
-        self.message_template[1]["content"]= str(text)
+        self.message_template[1]["content"] = f'''Your task is to create concise, accurate summaries. Please keep the summary length to a minimum but point at techniques.
+                                                The text: {text}, The summarization:'''
         response = self.client.chat.completions.create(
             model="local-model",
             messages=self.message_template,
             temperature=temperature,
-            max_tokens=max_token,
-            n=n,
             stop=stop    
         )
-        return response.choices[0].message.content
+        return response.choices[0].message.content.strip()
 
 
 
