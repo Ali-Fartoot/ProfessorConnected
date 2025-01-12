@@ -66,11 +66,10 @@ class AuthorDocumentProcessor:
             
             # Remove duplicates and convert to string
             unique_keywords = list(set(filter(None, all_keywords)))
+            print(unique_keywords)
             
             return {
-                "summaries": {
-                    "sections": self.summarizer.infer("\n".join(sections))
-                },
+                "summaries": self.summarizer.infer("\n".join(sections)),
                 "keywords": ", ".join(unique_keywords)
             }
         
