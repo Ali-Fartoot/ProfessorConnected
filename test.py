@@ -45,10 +45,10 @@ class ProfessorResearchProfile:
         pass
 
     def add_professor(self, 
-                     name: str,
-                     papers: List[Dict[str, str]],
-                     department: str = None,
-                     university: str = None):
+                      name: str,
+                      papers: List[Dict[str, str]],
+                      department: str = None,
+                      university: str = None):
         """
         Add a professor and their research papers to the database
         
@@ -86,7 +86,7 @@ class ProfessorResearchProfile:
                 'top_keywords': top_keywords,
                 'keyword_frequencies': dict(keyword_freq),
                 'paper_count': len(papers),
-                'last_updated': datetime.utcnow().isoformat()
+                'last_updated': datetime.now(timezone.utc).isoformat()  # Updated line
             }
         )
 
@@ -97,9 +97,9 @@ class ProfessorResearchProfile:
         )
 
     def find_similar_professors(self,
-                              professor_name: str,
-                              limit: int = 5,
-                              min_similarity: float = 0.6) -> List[Dict[str, Any]]:
+                                professor_name: str,
+                                limit: int = 5,
+                                min_similarity: float = 0.6) -> List[Dict[str, Any]]:
         """
         Find professors with similar research interests
         
@@ -126,7 +126,9 @@ class ProfessorResearchProfile:
         
         if not prof_results:
             raise ValueError(f"Professor {professor_name} not found in database")
-            
+        
+        print(f"Professor {professor_name} found: {prof_results[0].payload}")  # Debugging line
+
         prof_vector = self.client.retrieve(
             collection_name=self.collection_name,
             ids=[prof_results[0].id]
@@ -134,6 +136,8 @@ class ProfessorResearchProfile:
         
         if prof_vector is None:
             raise ValueError(f"Vector for professor {professor_name} not found")
+        
+        print(f"Vector for Professor {professor_name}: {prof_vector}")  # Debugging line
         
         # Find similar professors
         similar_profs = self.client.search(
@@ -164,38 +168,6 @@ class ProfessorResearchProfile:
             }
             for hit in similar_profs
         ]
-
-    def get_professor_stats(self, name: str) -> Dict[str, Any]:
-        """Get detailed statistics about a professor's research profile"""
-        filter_query = models.Filter(
-            must=[
-                models.FieldCondition(
-                    key="name",
-                    match=models.MatchText(text=name)
-                )
-            ]
-        )
-        
-        results = self.client.scroll(
-            collection_name=self.collection_name,
-            scroll_filter=filter_query,
-            limit=1
-        )[0]
-        
-        if not results:
-            raise ValueError(f"Professor {name} not found in database")
-            
-        prof = results[0].payload
-        
-        return {
-            'name': prof['name'],
-            'department': prof.get('department'),
-            'university': prof.get('university'),
-            'paper_count': prof['paper_count'],
-            'top_keywords': prof['top_keywords'][:10],  # Top 10 keywords
-            'keyword_frequencies': prof['keyword_frequencies'],
-            'last_updated': prof['last_updated']
-        }
 
 # Usage Example
 if __name__ == "__main__":
