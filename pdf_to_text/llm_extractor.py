@@ -103,4 +103,4 @@ class SummarizerAgent(LLMAgent):
 class KeyextractorLLM(LLMAgent):
     def __init__(self, message=None):
         super().__init__(message)
-        return keybert_openai(KeyLLM(self.client))
+        return KeyLLM(keybert_openai(self.client))
