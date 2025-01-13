@@ -153,18 +153,16 @@ class ProfessorVisualizer:
         """
         Generate and save all visualization figures
         """
-        os.makedirs(output_dir, exist_ok=True)
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        
+        os.makedirs(output_dir, exist_ok=True)        
         network_fig = self.create_network_graph(professor_name, limit=limit)
         network_path = os.path.join(output_dir, 
-                                  f"network_{professor_name}_{timestamp}.{format}")
+                                  f"network_{professor_name}.{format}")
         network_fig.write_image(network_path)
         print(f"Network graph saved to: {network_path}")
         
         heatmap_fig = self.create_similarity_heatmap(professor_name, limit=limit)
         heatmap_path = os.path.join(output_dir, 
-                                   f"heatmap_{professor_name}_{timestamp}.{format}")
+                                   f"heatmap_{professor_name}.{format}")
         heatmap_fig.write_image(heatmap_path)
         print(f"Heatmap saved to: {heatmap_path}")
         
