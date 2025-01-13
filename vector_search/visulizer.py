@@ -8,7 +8,7 @@ from typing import List, Dict
 import pandas as pd
 from vector_search import ProfessorResearchProfile
 import os, datetime
-
+import json
 
 class ProfessorVisualizer:
     def __init__(self, path: str = "./professor_db"):
