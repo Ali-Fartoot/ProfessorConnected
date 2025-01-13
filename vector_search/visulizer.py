@@ -20,36 +20,49 @@ class ProfessorVisualizer:
 
     def create_network_graph(self, professor_name: str, limit: int = 5, min_similarity: float = 0.3):
         """
-        Create an interactive network graph showing professor relationships
+        Create an interactive network graph showing all professors but connecting only
+        the input professor with their most similar professors
         """
         with ProfessorResearchProfile(path=self.path) as profile_system:
+            # Get similar professors
             similar_profs = profile_system.find_similar_professors(
                 professor_name=professor_name,
                 limit=limit,
                 min_similarity=min_similarity
             )
             central_prof_data = profile_system.get_professor_stats(professor_name)
+            
+            # Get all professors from the collection
+            all_professors = profile_system.collection.get()
 
         G = nx.Graph()
 
-        # Add central node
-        G.add_node(professor_name, 
-                  size=20,
-                  color=self.colors[0],
-                  keywords=central_prof_data['top_keywords'])
+        # Add all professors as nodes
+        for i, prof_metadata in enumerate(all_professors['metadatas']):
+            prof_name = prof_metadata['name']
+            # Make the node bigger and different color if it's the input professor
+            if prof_name == professor_name:
+                G.add_node(prof_name,
+                        size=20,
+                        color=self.colors[0],
+                        keywords=json.loads(prof_metadata['top_keywords']))
+            else:
+                G.add_node(prof_name,
+                        size=10,  # smaller size for other professors
+                        color=self.colors[-1],  # different color for other professors
+                        keywords=json.loads(prof_metadata['top_keywords']))
 
-        # Add nodes and edges for similar professors
+        # Add edges only for similar professors
         for i, prof in enumerate(similar_profs):
-            G.add_node(prof['name'],
-                      size=15,
-                      color=self.colors[(i + 1) % len(self.colors)],
-                      keywords=prof['top_keywords'])
-            
             G.add_edge(professor_name, 
-                      prof['name'],
-                      weight=prof['similarity_score'])
+                    prof['name'],
+                    weight=prof['similarity_score'])
+            # Make connected professors' nodes slightly bigger and different color
+            G.nodes[prof['name']]['size'] = 15
+            G.nodes[prof['name']]['color'] = self.colors[i + 1]
 
-        pos = nx.spring_layout(G)
+        # Calculate layout - using larger spacing for better visualization
+        pos = nx.spring_layout(G, k=1.5)
 
         # Create edges trace
         edge_x = []
@@ -102,14 +115,14 @@ class ProfessorVisualizer:
                 line_width=2))
 
         fig = go.Figure(data=[edges_trace, nodes_trace],
-                       layout=go.Layout(
-                           title=f'Research Similarity Network for {professor_name}',
-                           showlegend=False,
-                           hovermode='closest',
-                           margin=dict(b=20,l=5,r=5,t=40),
-                           xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
-                           yaxis=dict(showgrid=False, zeroline=False, showticklabels=False))
-                       )
+                    layout=go.Layout(
+                        title=f'Research Similarity Network for {professor_name}',
+                        showlegend=False,
+                        hovermode='closest',
+                        margin=dict(b=20,l=5,r=5,t=40),
+                        xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+                        yaxis=dict(showgrid=False, zeroline=False, showticklabels=False))
+                    )
 
         return fig
 
