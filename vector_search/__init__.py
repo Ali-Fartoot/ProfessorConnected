@@ -378,12 +378,10 @@ if __name__ == "__main__":
             json_object = json.load(openfile)
             professor_name =  list(json_object.keys())[0]
 
-            for papers in json_object[professor_name]:
-                print(papers)
-                profile_system.add_professor(
-                    name=professor_name,
-                    papers=papers
-                )
+            profile_system.add_professor(
+                name=professor_name,
+                papers=json_object[professor_name]
+            )
 
             # Find similar professors
             similar_profs = profile_system.find_similar_professors(
