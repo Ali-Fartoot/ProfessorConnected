@@ -31,7 +31,8 @@ class ProfessorResearchProfile:
     def __enter__(self):
         return self
         
-
+    def __exit__(self):
+        return self
         
     def cleanup(self):
         """
