@@ -14,17 +14,15 @@ class ProfessorResearchProfile:
     def __init__(self, 
                  collection_name: str = "professor_profiles",
                  embedding_model: str = 'all-MiniLM-L6-v2',
-                 location: str = ":memory:"):
+                 path: str = "./professor_db"):
         """
         Initialize the professor research profile system
         """
-        self.client = QdrantClient(path=location)
+        self.path = path  # Store path instead of location
         self.collection_name = collection_name
         self.model = SentenceTransformer(embedding_model)
         self.embedding_dim = self.model.get_sentence_embedding_dimension()
-        
-        # Create collection
-        self._create_collection()
+        self.client = None  # Initialize client as None
         
         # Register cleanup method
         atexit.register(self.cleanup)
@@ -39,7 +37,7 @@ class ProfessorResearchProfile:
 
         for attempt in range(max_retries):
             try:
-                self.client = QdrantClient(path=self.location)
+                self.client = QdrantClient(path=self.path)  # Use path instead of location
                 self._create_collection()
                 return self
             except RuntimeError as e:
@@ -50,7 +48,6 @@ class ProfessorResearchProfile:
                 raise last_exception
             except Exception as e:
                 raise e
-            
         
     def __exit__(self, exc_type, exc_value, traceback):
         """
@@ -218,41 +215,35 @@ class ProfessorResearchProfile:
 
 # Add professor to professor_db
 def add_professor(name: str):
-
     try:
-
-        with ProfessorResearchProfile(location="./professor_db") as profile_system:
-                with open(f'./data/{name}/{name}.json', 'r') as openfile:
-                    json_object = json.load(openfile)
-                    professor_name =  list(json_object.keys())[0]
-
-                    profile_system.add_professor(
-                        name=professor_name,
-                        papers=json_object[professor_name]
-                    )
+        with ProfessorResearchProfile(path="./professor_db") as profile_system:  # Changed to path
+            with open(f'./data/{name}/{name}.json', 'r') as openfile:
+                json_object = json.load(openfile)
+                professor_name = list(json_object.keys())[0]
+                profile_system.add_professor(
+                    name=professor_name,
+                    papers=json_object[professor_name]
+                )
     except Exception as e:
         print("Error adding professor to database: ", e)
         raise
 
-
-
-# return similar professor from professor_db
-def find_smilar_professor(limit: int = 5):
+def find_similar_professor(limit: int = 5):
     try:
-        with ProfessorResearchProfile(location="./professor_db") as profile_system:
+        with ProfessorResearchProfile(path="./professor_db") as profile_system:  # Changed to path
             similar_profs = profile_system.find_similar_professors(
                 professor_name="Majid Nili Ahmadabadi",
                 limit=limit
             )
         return similar_profs
     except Exception as e:
-        print("Error adding professor to database: ", e)
+        print("Error finding similar professors: ", e)
         raise
 
 def cleanup_database():
     try:
-        time.sleep(1) 
-        with ProfessorResearchProfile(location="./professor_db") as profile_system:
+        time.sleep(1)
+        with ProfessorResearchProfile(path="./professor_db") as profile_system:  # Changed to path
             profile_system.cleanup()
     except Exception as e:
         print(f"Error during database cleanup: {e}")
