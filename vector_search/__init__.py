@@ -53,10 +53,6 @@ class ProfessorResearchProfile:
         """
         Context manager exit with proper cleanup
         """
-        if self.client:
-            self.client.close()
-            self.client = None
-
         return False 
         
     def cleanup(self):
