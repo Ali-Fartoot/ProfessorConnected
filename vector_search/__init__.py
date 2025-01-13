@@ -379,6 +379,7 @@ if __name__ == "__main__":
             json_object = json.load(openfile)
             professor_name =  json_object.keys()
             print(professor_name)
+            print(json_object[professor_name])
             for papers in json_object[professor_name]:
                 profile_system.add_professor(
                     name=professor_name,
