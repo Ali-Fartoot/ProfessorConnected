@@ -7,170 +7,130 @@ import networkx as nx
 from typing import List, Dict
 import pandas as pd
 from vector_search import ProfessorResearchProfile
+import os, datetime
+
 
 class ProfessorVisualizer:
-    def __init__(self, profile_system: ProfessorResearchProfile):
+    def __init__(self, path: str = "./professor_db"):
         """
-        Initialize visualizer with ProfessorResearchProfile system
+        Initialize visualizer with database path
         """
-        self.profile_system = profile_system
+        self.path = path
         self.colors = px.colors.qualitative.Set3
-        
-    def _get_all_professors_embeddings(self):
-        """Get embeddings for all professors"""
-        all_points = self.profile_system.client.scroll(
-            collection_name=self.profile_system.collection_name,
-            limit=1000  # Adjust based on your needs
-        )[0]
-        
-        embeddings = []
-        names = []
-        departments = []
-        universities = []
-        
-        for point in all_points:
-            embeddings.append(point.vector)
-            names.append(point.payload['name'])
-            departments.append(point.payload.get('department', 'Unknown'))
-            universities.append(point.payload.get('university', 'Unknown'))
-            
-        return np.array(embeddings), names, departments, universities
 
-    def create_network_graph(self, similarity_threshold: float = 0.7):
+    def create_network_graph(self, professor_name: str, limit: int = 5, min_similarity: float = 0.3):
         """
         Create an interactive network graph showing professor relationships
         """
-        embeddings, names, departments, universities = self._get_all_professors_embeddings()
-        
-        # Calculate similarity matrix
-        similarity_matrix = np.inner(embeddings, embeddings)
-        
-        # Create network graph
+        with ProfessorResearchProfile(path=self.path) as profile_system:
+            similar_profs = profile_system.find_similar_professors(
+                professor_name=professor_name,
+                limit=limit,
+                min_similarity=min_similarity
+            )
+            central_prof_data = profile_system.get_professor_stats(professor_name)
+
         G = nx.Graph()
-        
-        # Add nodes
-        for i, name in enumerate(names):
-            G.add_node(name, 
-                      department=departments[i],
-                      university=universities[i])
-        
-        # Add edges based on similarity
-        for i in range(len(names)):
-            for j in range(i + 1, len(names)):
-                if similarity_matrix[i][j] > similarity_threshold:
-                    G.add_edge(names[i], names[j], 
-                             weight=similarity_matrix[i][j])
-        
-        # Get position layout
+
+        # Add central node
+        G.add_node(professor_name, 
+                  size=20,
+                  color=self.colors[0],
+                  keywords=central_prof_data['top_keywords'])
+
+        # Add nodes and edges for similar professors
+        for i, prof in enumerate(similar_profs):
+            G.add_node(prof['name'],
+                      size=15,
+                      color=self.colors[(i + 1) % len(self.colors)],
+                      keywords=prof['top_keywords'])
+            
+            G.add_edge(professor_name, 
+                      prof['name'],
+                      weight=prof['similarity_score'])
+
         pos = nx.spring_layout(G)
-        
+
         # Create edges trace
         edge_x = []
         edge_y = []
-        edge_weights = []
-        
+        edge_text = []
+
         for edge in G.edges():
             x0, y0 = pos[edge[0]]
             x1, y1 = pos[edge[1]]
             edge_x.extend([x0, x1, None])
             edge_y.extend([y0, y1, None])
-            edge_weights.append(G.edges[edge]['weight'])
-        
+            similarity = G.edges[edge]['weight']
+            edge_text.append(f"Similarity: {similarity:.2f}")
+
         edges_trace = go.Scatter(
             x=edge_x, y=edge_y,
-            line=dict(width=0.5, color='#888'),
-            hoverinfo='none',
+            line=dict(width=1, color='#888'),
+            hoverinfo='text',
+            text=edge_text,
             mode='lines')
-        
+
         # Create nodes trace
         node_x = []
         node_y = []
         node_text = []
         node_colors = []
-        
+        node_sizes = []
+
         for node in G.nodes():
             x, y = pos[node]
             node_x.append(x)
             node_y.append(y)
             node_text.append(
                 f"Professor: {node}<br>"
-                f"Department: {G.nodes[node]['department']}<br>"
-                f"University: {G.nodes[node]['university']}"
+                f"Top Keywords: {', '.join(G.nodes[node]['keywords'])}"
             )
-            # Assign colors based on department
-            node_colors.append(hash(G.nodes[node]['department']) % len(self.colors))
-        
+            node_colors.append(G.nodes[node]['color'])
+            node_sizes.append(G.nodes[node]['size'])
+
         nodes_trace = go.Scatter(
             x=node_x, y=node_y,
-            mode='markers',
+            mode='markers+text',
             hoverinfo='text',
-            text=node_text,
+            text=[node for node in G.nodes()],
+            textposition="bottom center",
+            hovertext=node_text,
             marker=dict(
-                size=10,
-                color=[self.colors[c] for c in node_colors],
+                size=node_sizes,
+                color=node_colors,
                 line_width=2))
-        
-        # Create figure
+
         fig = go.Figure(data=[edges_trace, nodes_trace],
                        layout=go.Layout(
-                           title='Professor Research Similarity Network',
+                           title=f'Research Similarity Network for {professor_name}',
                            showlegend=False,
                            hovermode='closest',
                            margin=dict(b=20,l=5,r=5,t=40),
                            xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
                            yaxis=dict(showgrid=False, zeroline=False, showticklabels=False))
                        )
-        
+
         return fig
 
-    def create_2d_projection(self):
+    def create_similarity_heatmap(self, professor_name: str, limit: int = 5):
         """
-        Create 2D projection of professor similarities using t-SNE
+        Create a heatmap showing similarities between professors
         """
-        embeddings, names, departments, universities = self._get_all_professors_embeddings()
-        
-        # Apply t-SNE
-        tsne = TSNE(n_components=2, random_state=42)
-        embeddings_2d = tsne.fit_transform(embeddings)
-        
-        # Create DataFrame for plotting
-        df = pd.DataFrame({
-            'x': embeddings_2d[:, 0],
-            'y': embeddings_2d[:, 1],
-            'Professor': names,
-            'Department': departments,
-            'University': universities
-        })
-        
-        # Create scatter plot
-        fig = px.scatter(df, x='x', y='y',
-                        color='Department',
-                        hover_data=['Professor', 'University'],
-                        title='2D Projection of Professor Research Similarities')
-        
-        fig.update_traces(marker=dict(size=10))
-        
-        return fig
+        with ProfessorResearchProfile(path=self.path) as profile_system:
+            similar_profs = profile_system.find_similar_professors(
+                professor_name=professor_name,
+                limit=limit
+            )
 
-    def create_similarity_heatmap(self, professor_name: str, top_n: int = 10):
-        """
-        Create a heatmap showing similarities between a professor and their top N most similar colleagues
-        """
-        # Get similar professors
-        similar_profs = self.profile_system.find_similar_professors(
-            professor_name=professor_name,
-            limit=top_n,
-            min_similarity=0.0
-        )
-        
-        # Create similarity matrix
         names = [professor_name] + [prof['name'] for prof in similar_profs]
+        matrix_size = len(names)
+        similarity_matrix = np.zeros((matrix_size, matrix_size))
         
-        similarity_matrix = np.zeros((len(names), len(names)))
-        similarity_matrix[0, 1:] = [prof['similarity_score'] for prof in similar_profs]
-        similarity_matrix[1:, 0] = similarity_matrix[0, 1:]
-        
-        # Create heatmap
+        for i, prof in enumerate(similar_profs):
+            similarity_matrix[0, i+1] = prof['similarity_score']
+            similarity_matrix[i+1, 0] = prof['similarity_score']
+
         fig = go.Figure(data=go.Heatmap(
             z=similarity_matrix,
             x=names,
@@ -178,52 +138,37 @@ class ProfessorVisualizer:
             colorscale='Viridis',
             text=np.round(similarity_matrix, 2),
             texttemplate='%{text}',
-            textfont={'size': 10},
-            hoverongaps=False))
-        
+            textfont={'size': 10}))
+
         fig.update_layout(
             title=f'Research Similarity Heatmap for {professor_name}',
             xaxis_title='Professors',
             yaxis_title='Professors'
         )
-        
+
         return fig
-    
+
     def save_figures(self, professor_name: str, output_dir: str = "./figures", 
                     format: str = "png", limit: int = 5):
         """
         Generate and save all visualization figures
-        
-        Args:
-            professor_name (str): Name of the professor
-            output_dir (str): Directory to save figures
-            format (str): Image format ('png', 'jpg', 'pdf', 'svg')
-            limit (int): Number of similar professors to include
         """
-        import os
-        from datetime import datetime
-        
-        # Create output directory if it doesn't exist
         os.makedirs(output_dir, exist_ok=True)
-        
-        # Generate timestamp
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         
-        # Create and save network graph
         network_fig = self.create_network_graph(professor_name, limit=limit)
         network_path = os.path.join(output_dir, 
                                   f"network_{professor_name}_{timestamp}.{format}")
         network_fig.write_image(network_path)
         print(f"Network graph saved to: {network_path}")
         
-        # Create and save heatmap
         heatmap_fig = self.create_similarity_heatmap(professor_name, limit=limit)
         heatmap_path = os.path.join(output_dir, 
                                    f"heatmap_{professor_name}_{timestamp}.{format}")
         heatmap_fig.write_image(heatmap_path)
         print(f"Heatmap saved to: {heatmap_path}")
+        
         return heatmap_fig
-
 
 # Usage Example
 if __name__ == "__main__":
