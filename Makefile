@@ -24,3 +24,4 @@ request:
 clean:
 	@echo "Cleaning data folder"
 	rm -rf data/*
+	rm -rf professor_db/*

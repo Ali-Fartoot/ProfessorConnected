@@ -48,21 +48,28 @@ class ProfessorResearchProfile:
         Cleanup method to delete collection
         """
         try:
-            self.client.delete_collection(name=self.collection_name)
-            print(f"\nCollection {self.collection_name} has been deleted.")
+            # Check if collection exists before trying to delete it
+            collections = self.client.list_collections()
+            if any(collection.name == self.collection_name for collection in collections):
+                self.client.delete_collection(name=self.collection_name)
+                print(f"\nCollection {self.collection_name} has been deleted.")
+            else:
+                print(f"\nCollection {self.collection_name} does not exist, nothing to delete.")
         except Exception as e:
             print(f"\nError during cleanup: {e}")
             
     def _create_collection(self):
         """Create collection for professor profiles"""
         try:
+            # Get existing collection or create new one
             self.collection = self.client.get_or_create_collection(
                 name=self.collection_name,
                 metadata={"hnsw:space": "cosine"}
             )
+            print(f"Collection {self.collection_name} is ready.")
         except Exception as e:
-            print(f"Collection creation notice: {e}")
-            pass
+            print(f"Collection creation error: {e}")
+            raise
 
     def add_professor(self, 
                      name: str,
@@ -74,16 +81,18 @@ class ProfessorResearchProfile:
         """
         all_keywords = []
         all_summaries = []
+        all_titles = []
         for paper in papers:
+            all_titles.append(paper["title"])
             all_keywords.extend([k.strip() for k in paper['Keywords'].split(',')])
             all_summaries.append(paper['summary'])
 
         keyword_freq = Counter(all_keywords)
         top_keywords = [k for k, _ in keyword_freq.most_common(20)]
+        titles = ", ".join(all_titles)
 
-        combined_text = f"{' '.join(top_keywords)} {' '.join(all_summaries)}"
+        combined_text = f"{' '.join(top_keywords)} {' '.join(all_summaries)} {titles}"
         embedding = self.model.encode(combined_text).tolist()
-
         metadata = {
             'name': name,
             'department': department if department else "",
@@ -94,12 +103,29 @@ class ProfessorResearchProfile:
             'papers': json.dumps(papers)
         }
 
-        self.collection.add(
-            documents=[combined_text],
-            embeddings=[embedding],
-            metadatas=[metadata],
-            ids=[str(uuid.uuid4())]
+        # Check if professor already exists and update if necessary
+        existing_entries = self.collection.get(
+            where={"name": name}
         )
+        
+        if existing_entries['ids']:
+            # Update existing entry
+            self.collection.update(
+                ids=existing_entries['ids'][0],
+                embeddings=[embedding],
+                metadatas=[metadata],
+                documents=[combined_text]
+            )
+            print(f"Updated existing profile for professor {name}")
+        else:
+            # Add new entry
+            self.collection.add(
+                documents=[combined_text],
+                embeddings=[embedding],
+                metadatas=[metadata],
+                ids=[str(uuid.uuid4())]
+            )
+            print(f"Added new profile for professor {name}")
 
     def find_similar_professors(self,
                               professor_name: str,
@@ -165,7 +191,7 @@ class ProfessorResearchProfile:
             'top_keywords': json.loads(metadata['top_keywords'])
         }
 
-# The helper functions remain the same
+
 def add_professor(name: str):
     try:
         with ProfessorResearchProfile(path="./professor_db") as profile_system:  
@@ -176,6 +202,7 @@ def add_professor(name: str):
                     name=professor_name,
                     papers=json_object[professor_name]
                 )
+                print(f"Successfully processed professor {professor_name}")
     except Exception as e:
         print("Error adding professor to database: ", e)
         raise
@@ -187,7 +214,7 @@ def find_similar_professor(limit: int = 5):
                 professor_name="Majid Nili Ahmadabadi",
                 limit=limit
             )
-        return similar_profs
+            return similar_profs
     except Exception as e:
         print("Error finding similar professors: ", e)
         raise
