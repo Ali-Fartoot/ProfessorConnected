@@ -2,7 +2,7 @@ from crawler import crawl
 from pdf_to_text import AuthorDocumentProcessor
 import os
 import time
-from vector_search import cleanup_database, add_professor, find_smilar_professor
+from vector_search import cleanup_database, add_professor, find_similar_professor
 
 start = time.time()
 

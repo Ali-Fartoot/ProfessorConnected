@@ -216,7 +216,7 @@ class ProfessorResearchProfile:
 # Add professor to professor_db
 def add_professor(name: str):
     try:
-        with ProfessorResearchProfile(path="./professor_db") as profile_system:  # Changed to path
+        with ProfessorResearchProfile(path="./professor_db") as profile_system:  
             with open(f'./data/{name}/{name}.json', 'r') as openfile:
                 json_object = json.load(openfile)
                 professor_name = list(json_object.keys())[0]
@@ -228,9 +228,10 @@ def add_professor(name: str):
         print("Error adding professor to database: ", e)
         raise
 
+# Find similar professors
 def find_similar_professor(limit: int = 5):
     try:
-        with ProfessorResearchProfile(path="./professor_db") as profile_system:  # Changed to path
+        with ProfessorResearchProfile(path="./professor_db") as profile_system:  
             similar_profs = profile_system.find_similar_professors(
                 professor_name="Majid Nili Ahmadabadi",
                 limit=limit
@@ -243,7 +244,7 @@ def find_similar_professor(limit: int = 5):
 def cleanup_database():
     try:
         time.sleep(1)
-        with ProfessorResearchProfile(path="./professor_db") as profile_system:  # Changed to path
+        with ProfessorResearchProfile(path="./professor_db") as profile_system:  
             profile_system.cleanup()
     except Exception as e:
         print(f"Error during database cleanup: {e}")
