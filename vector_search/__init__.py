@@ -8,6 +8,7 @@ from collections import Counter
 import uuid
 import atexit
 import json
+import time
 
 class ProfessorResearchProfile:
     def __init__(self, 
@@ -29,10 +30,37 @@ class ProfessorResearchProfile:
         atexit.register(self.cleanup)
         
     def __enter__(self):
-        return self
+        """
+        Context manager entry with retry mechanism
+        """
+        max_retries = 3
+        retry_delay = 1
+        last_exception = None
+
+        for attempt in range(max_retries):
+            try:
+                self.client = QdrantClient(path=self.location)
+                self._create_collection()
+                return self
+            except RuntimeError as e:
+                last_exception = e
+                if "already accessed" in str(e) and attempt < max_retries - 1:
+                    time.sleep(retry_delay)
+                    continue
+                raise last_exception
+            except Exception as e:
+                raise e
+            
         
     def __exit__(self, exc_type, exc_value, traceback):
-        return False
+        """
+        Context manager exit with proper cleanup
+        """
+        if self.client:
+            self.client.close()
+            self.client = None
+
+        return False 
         
     def cleanup(self):
         """
@@ -191,27 +219,41 @@ class ProfessorResearchProfile:
 # Add professor to professor_db
 def add_professor(name: str):
 
-    with ProfessorResearchProfile(location="./professor_db") as profile_system:
-            with open(f'./data/{name}/{name}.json', 'r') as openfile:
-                json_object = json.load(openfile)
-                professor_name =  list(json_object.keys())[0]
+    try:
 
-                profile_system.add_professor(
-                    name=professor_name,
-                    papers=json_object[professor_name]
-                )
+        with ProfessorResearchProfile(location="./professor_db") as profile_system:
+                with open(f'./data/{name}/{name}.json', 'r') as openfile:
+                    json_object = json.load(openfile)
+                    professor_name =  list(json_object.keys())[0]
+
+                    profile_system.add_professor(
+                        name=professor_name,
+                        papers=json_object[professor_name]
+                    )
+    except Exception as e:
+        print("Error adding professor to database: ", e)
+        raise
+
+
 
 # return similar professor from professor_db
 def find_smilar_professor(limit: int = 5):
-
-    with ProfessorResearchProfile(location="./professor_db") as profile_system:
-        similar_profs = profile_system.find_similar_professors(
-            professor_name="Majid Nili Ahmadabadi",
-            limit=limit
-        )
-
-    return similar_profs
+    try:
+        with ProfessorResearchProfile(location="./professor_db") as profile_system:
+            similar_profs = profile_system.find_similar_professors(
+                professor_name="Majid Nili Ahmadabadi",
+                limit=limit
+            )
+        return similar_profs
+    except Exception as e:
+        print("Error adding professor to database: ", e)
+        raise
 
 def cleanup_database():
-    with ProfessorResearchProfile(location="./professor_db") as profile_system:
-        profile_system.cleanup()
+    try:
+        time.sleep(1) 
+        with ProfessorResearchProfile(location="./professor_db") as profile_system:
+            profile_system.cleanup()
+    except Exception as e:
+        print(f"Error during database cleanup: {e}")
+        raise
