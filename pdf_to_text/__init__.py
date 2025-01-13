@@ -154,6 +154,6 @@ class AuthorDocumentProcessor:
                 })
 
         # Save to JSON file
-        output_path = os.path.join(author_path, f"{author_name}_analysis.json")
+        output_path = os.path.join(author_path, f"{author_name}.json")
         with open(output_path, 'w', encoding='utf-8') as f:
             json.dump(author_data, f, indent=4, ensure_ascii=False)

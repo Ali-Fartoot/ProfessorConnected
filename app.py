@@ -2,7 +2,7 @@ from crawler import crawl
 from pdf_to_text import AuthorDocumentProcessor
 import os
 import time
-
+from vector_search import cleanup_database, add_professor, find_smilar_professor
 start = time.time()
 
 name = "Majid Nili Ahmadabadi"
@@ -19,6 +19,10 @@ if not os.path.exists(os.path.join("data", name, name + ".json")):
     document_processor(name)
 else:
     print("The author papers are already processed")
+
+
+add_professor(name)
+cleanup_database()
 
 end = time.time()
 
