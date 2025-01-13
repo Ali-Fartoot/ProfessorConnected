@@ -377,7 +377,7 @@ if __name__ == "__main__":
     with ProfessorResearchProfile(location="./professor_db") as profile_system:
         with open('./data/Majid Nili Ahmadabadi/Majdi Nili Ahmadabadi.json', 'r') as openfile:
             json_object = json.load(openfile)
-            professor_name =  json_object.keys()[0]
+            professor_name =  list(json_object.keys())[0]
 
             for papers in json_object[professor_name]:
                 profile_system.add_professor(
