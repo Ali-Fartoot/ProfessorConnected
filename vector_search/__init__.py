@@ -7,6 +7,7 @@ import numpy as np
 from collections import Counter
 import uuid
 import atexit
+import json
 
 class ProfessorResearchProfile:
     def __init__(self, 
@@ -374,14 +375,15 @@ professor_data = [
 
 if __name__ == "__main__":
     with ProfessorResearchProfile(location="./professor_db") as profile_system:
-        # Add professors
-        for prof_data in professor_data:
-            profile_system.add_professor(
-                name=prof_data["name"],
-                papers=prof_data["papers"]
-            )
+        with open('./data/Majdi Nili Ahmadabadi.json', 'r') as openfile:
+            json_object = json.load(openfile)
+            professor_name =  json_object.keys()
+            for papers in json_object[professor_name]:
+                profile_system.add_professor(
+                    name=professor_name,
+                    papers=papers
+                )
 
-        try:
             # Find similar professors
             similar_profs = profile_system.find_similar_professors(
                 professor_name="Dr. Sarah Chen",
@@ -402,5 +404,3 @@ if __name__ == "__main__":
             print(f"Papers: {stats['paper_count']}")
             print(f"Top Keywords: {', '.join(stats['top_keywords'])}")
 
-        except Exception as e:
-            print(f"An error occurred: {e}")
