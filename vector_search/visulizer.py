@@ -7,6 +7,7 @@ import networkx as nx
 from typing import List, Dict
 import pandas as pd
 from test import ProfessorResearchProfile
+
 class ProfessorVisualizer:
     def __init__(self, profile_system: ProfessorResearchProfile):
         """
