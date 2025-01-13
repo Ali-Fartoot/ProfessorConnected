@@ -385,7 +385,7 @@ if __name__ == "__main__":
 
             # Find similar professors
             similar_profs = profile_system.find_similar_professors(
-                professor_name="Dr. Sarah Chen",
+                professor_name="Majid Nili Ahmadabadi",
                 limit=5
             )
 
