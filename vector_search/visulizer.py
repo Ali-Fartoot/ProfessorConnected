@@ -6,7 +6,7 @@ import numpy as np
 import networkx as nx
 from typing import List, Dict
 import pandas as pd
-from test import ProfessorResearchProfile
+from vector_search import ProfessorResearchProfile
 
 class ProfessorVisualizer:
     def __init__(self, profile_system: ProfessorResearchProfile):
@@ -188,26 +188,49 @@ class ProfessorVisualizer:
         )
         
         return fig
+    
+    def save_figures(self, professor_name: str, output_dir: str = "./figures", 
+                    format: str = "png", limit: int = 5):
+        """
+        Generate and save all visualization figures
+        
+        Args:
+            professor_name (str): Name of the professor
+            output_dir (str): Directory to save figures
+            format (str): Image format ('png', 'jpg', 'pdf', 'svg')
+            limit (int): Number of similar professors to include
+        """
+        import os
+        from datetime import datetime
+        
+        # Create output directory if it doesn't exist
+        os.makedirs(output_dir, exist_ok=True)
+        
+        # Generate timestamp
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        
+        # Create and save network graph
+        network_fig = self.create_network_graph(professor_name, limit=limit)
+        network_path = os.path.join(output_dir, 
+                                  f"network_{professor_name}_{timestamp}.{format}")
+        network_fig.write_image(network_path)
+        print(f"Network graph saved to: {network_path}")
+        
+        # Create and save heatmap
+        heatmap_fig = self.create_similarity_heatmap(professor_name, limit=limit)
+        heatmap_path = os.path.join(output_dir, 
+                                   f"heatmap_{professor_name}_{timestamp}.{format}")
+        heatmap_fig.write_image(heatmap_path)
+        print(f"Heatmap saved to: {heatmap_path}")
+        return heatmap_fig
+
 
 # Usage Example
 if __name__ == "__main__":
-    # Initialize the profile system and visualizer
-    profile_system = ProfessorResearchProfile(location="./professor_db")
-    visualizer = ProfessorVisualizer(profile_system)
-    
-    # Create network graph
-    network_fig = visualizer.create_network_graph(similarity_threshold=0.7)
-    network_fig.show()
-    
-    # Create 2D projection
-    projection_fig = visualizer.create_2d_projection()
-    projection_fig.show()
-    
-    # Create similarity heatmap for a specific professor
-    heatmap_fig = visualizer.create_similarity_heatmap("Dr. Smith", top_n=10)
-    heatmap_fig.show()
-
-    # Optional: Save figures to HTML files
-    network_fig.write_html("professor_network.html")
-    projection_fig.write_html("professor_projection.html")
-    heatmap_fig.write_html("professor_heatmap.html")
+    visualizer = ProfessorVisualizer()
+    visualizer.save_figures(
+        professor_name="Majid Nili Ahmadabadi",
+        output_dir="./figures",
+        format="png",
+        limit=5
+    )

@@ -3,7 +3,7 @@ from pdf_to_text import AuthorDocumentProcessor
 import os
 import time
 from vector_search import cleanup_database, add_professor, find_similar_professor
-
+from vector_search.visulizer import ProfessorVisualizer
 start = time.time()
 
 name = "Majid Nili Ahmadabadi"
@@ -34,9 +34,16 @@ if os.path.exists(json_path):
 else:
     print("Document processing failed, professor not added to database.")
 
+visualizer = ProfessorVisualizer()
+image = visualizer.save_figures(
+        professor_name="Majid Nili Ahmadabadi",
+        output_dir="./figures",
+        format="png",
+        limit=5
+    )
 # Step 4: Cleanup database
-cleanup_database()
-print("Database cleanup completed.")
+# cleanup_database()
+# print("Database cleanup completed.")
 
 end = time.time()
 print(f"The app took {end - start} seconds.")
