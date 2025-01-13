@@ -31,8 +31,8 @@ class ProfessorResearchProfile:
     def __enter__(self):
         return self
         
-    def __exit__(self):
-        return self
+    def __exit__(self, exc_type, exc_value, traceback):
+        return False
         
     def cleanup(self):
         """
