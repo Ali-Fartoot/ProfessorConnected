@@ -24,9 +24,7 @@ class ProfessorResearchProfile:
         self.client = chromadb.PersistentClient(path=path)
         self.collection = None
         
-        # Register cleanup method
-        atexit.register(self.cleanup)
-        
+
     def __enter__(self):
         """
         Context manager entry
@@ -217,7 +215,7 @@ def find_similar_professor(limit: int = 5):
         print("Error finding similar professors: ", e)
         raise
 
-def cleanup_database(name: str ="professor_profiles"):
+def cleanup_database(name: str = "professor_profiles"):
     try:
         with ProfessorResearchProfile(path="./professor_db") as profile_system:  
             profile_system.cleanup(name)
