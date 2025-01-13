@@ -19,7 +19,7 @@ test:
 	. ./venv/bin/activate && pytest ./tests/ -v --capture=no --log-cli-level=INFO
 
 request:
-	nohup . ./venv/bin/activate && $(PYTHON) app.py &
+	. ./venv/bin/activate && $(PYTHON) app.py
 
 clean:
 	@echo "Cleaning data folders"
