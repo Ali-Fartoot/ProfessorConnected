@@ -64,8 +64,7 @@ class ProfessorResearchProfile:
             print(f"\nCollection {self.collection_name} has been deleted.")
         except Exception as e:
             print(f"\nError during cleanup: {e}")
-        finally:
-            self.client.close()
+
             
     def _create_collection(self):
         """Create collection for professor profiles"""
