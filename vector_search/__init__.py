@@ -43,18 +43,16 @@ class ProfessorResearchProfile:
         """
         return False 
         
-    def cleanup(self):
+    def cleanup(self, name):
         """
         Cleanup method to delete collection
         """
         try:
             # Check if collection exists before trying to delete it
             collections = self.client.list_collections()
-            if any(collection.name == self.collection_name for collection in collections):
-                self.client.delete_collection(name=self.collection_name)
-                print(f"\nCollection {self.collection_name} has been deleted.")
-            else:
-                print(f"\nCollection {self.collection_name} does not exist, nothing to delete.")
+            self.client.delete_collection(name=name)
+            print(f"\nCollection {self.collection_name} has been deleted.")
+
         except Exception as e:
             print(f"\nError during cleanup: {e}")
             
@@ -219,10 +217,10 @@ def find_similar_professor(limit: int = 5):
         print("Error finding similar professors: ", e)
         raise
 
-def cleanup_database():
+def cleanup_database(name: str ="professor_profiles"):
     try:
         with ProfessorResearchProfile(path="./professor_db") as profile_system:  
-            profile_system.cleanup()
+            profile_system.cleanup(name)
     except Exception as e:
         print(f"Error during database cleanup: {e}")
         raise
