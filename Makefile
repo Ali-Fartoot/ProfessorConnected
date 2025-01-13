@@ -22,6 +22,7 @@ request:
 	. ./venv/bin/activate && $(PYTHON) app.py
 
 clean:
-	@echo "Cleaning data folder"
+	@echo "Cleaning data folders"
 	rm -rf data/*
 	rm -rf professor_db/*
+	rm -rf figures
