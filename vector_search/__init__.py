@@ -71,7 +71,7 @@ class ProfessorResearchProfile:
         all_keywords = []
         all_summaries = []
         for paper in papers:
-            all_keywords.extend([k.strip() for k in paper['keywords'].split(',')])
+            all_keywords.extend([k.strip() for k in paper['Keywords'].split(',')])
             all_summaries.append(paper['summary'])
 
         keyword_freq = Counter(all_keywords)
@@ -188,8 +188,7 @@ class ProfessorResearchProfile:
             'top_keywords': prof_data['top_keywords']
         }
 
-# Example professor data
-# Example data for 10 professors
+
 professor_data = [
     {
         "name": "Dr. Sarah Chen",
