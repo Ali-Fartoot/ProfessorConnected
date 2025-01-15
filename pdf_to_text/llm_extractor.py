@@ -49,7 +49,8 @@ class SummarizerAgent(LLMAgent):
     def infer(self, 
               text: str, 
               temperature: float = 0.5, 
-              stop: str = None) -> str:
+              stop: str = None,
+              ) -> str:
 
         self.message_template[1]["content"] = f'''Your task is to create concise, accurate summaries. Please point at techniques by considering keywords. The summerization should have two part introduction and conclusion. but don't mention that by exact world
                                                 The text: {text}, The summarization:'''
@@ -57,9 +58,12 @@ class SummarizerAgent(LLMAgent):
             model="local-model",
             messages=self.message_template,
             temperature=temperature,
-            stop=stop    
+            stop=stop,
+            max_tokens=10000
+
         )
         return response.choices[0].message.content.strip()
+
 
 
 class KeyExtractorLLM(LLMAgent):
