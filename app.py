@@ -22,7 +22,7 @@ for name in professor:
 
     # Step 1: Crawl papers
     if not os.path.exists(data_path):
-        crawl(name, number_of_articles=10)
+        crawl(name, number_of_articles=4)
         print("Crawling completed.")
     else:
         print("The author papers already exist.")
