@@ -4,6 +4,7 @@ import os
 import json
 from .llm_extractor import SummarizerAgent, KeyExtractorLLM
 from keybert import KeyBERT
+import re
 
 class AuthorDocumentProcessor:
     def __init__(self, base_data_path='data'):
@@ -23,25 +24,46 @@ class AuthorDocumentProcessor:
         self.keywords_expander = KeyExtractorLLM()
 
     def _section_chunker(self, text: str, symbol: str = "## ", 
-                        sections=['Introduction', "Conclusion", "Discussion", "Future Works"]) -> list:
+                        sections={"start": ['Introduction'], "end": ["Conclusion", "Discussion", "Future Works", "Future Work"]}) -> list:
         """
-        Extract specific sections from the text.
+        Extract specific sections from the text and find figure captions with descriptions.
         
         Args:
             text (str): Text to process
             symbol (str): Section delimiter
-            sections (list): List of section names to extract
+            sections (dict): Dictionary of section names to extract
             
         Returns:
-            list: List of extracted section texts
+            tuple: (list of extracted section texts, list of figure captions with descriptions)
         """
         text_chunks = text.split(symbol)
         chunks = []
+        figures = []
+        
+        # Regex pattern for finding figure captions
+        figure_pattern = re.compile(r'(?i)(fig(?:ure)?\.?\s*\d+[.:]\s*.*?)(?:\n\n|\Z)', re.DOTALL)
+        
         for chunk in text_chunks:
-            for section in sections:
-                if section.lower() in chunk[:15].lower():
-                    chunks.append(chunk)
-        return chunks
+            # Find sections
+            for part in sections.keys():
+                find_part = False
+                for section in sections[part]:
+                    if section.lower() in chunk[:30].lower():
+                        chunks.append(chunk)
+                        find_part = True
+                    
+                    if find_part: break
+            
+            figure_matches = figure_pattern.finditer(chunk)
+            for match in figure_matches:
+                figure_text = match.group(1).strip()
+                figures.append(figure_text)
+                        
+
+        
+        assert len(chunks) == 2, f"Internal: Number of elements in returned chunks in parser isn't 2, {len(chunks)}"
+        
+        return chunks, figures
 
     def _process_text_with_llm(self, text: str, sections: list) -> dict:
         """
@@ -57,8 +79,8 @@ class AuthorDocumentProcessor:
             
             # Combine all keywords
             all_keywords = (
-                [i[0] for i in self.key_extractor.extract_keywords(" ".join(introduction_keywords))]+
-                [i[0] for i in self.key_extractor.extract_keywords(" ".join(conclusion_keywords))]+
+                [i[0] for i in self.keywords_expander.infer(" ".join(introduction_keywords))]+
+                [i[0] for i in self.keywords_expander.infer(" ".join(conclusion_keywords))]+
                 (expanded_intro if isinstance(expanded_intro, list) else [expanded_intro]) +
                 (expanded_conclusion if isinstance(expanded_conclusion, list) else [expanded_conclusion])
             )
@@ -95,6 +117,7 @@ class AuthorDocumentProcessor:
             
         Returns:
             dict: Structured data from PDF including traditional and LLM-based analysis
+            
         """
         try:
             # Step 1: Convert the document to markdown
@@ -102,7 +125,7 @@ class AuthorDocumentProcessor:
             markdown_text = result.document.export_to_markdown()
             
             # Step 2: Extract sections from the markdown text
-            selected_text = self._section_chunker(text=markdown_text)
+            selected_text, figures = self._section_chunker(text=markdown_text)
             
             # Step 3: Extract keywords using traditional methods
             overall_keywords = self.keyword_extractor.extract_keywords(markdown_text)
@@ -121,7 +144,9 @@ class AuthorDocumentProcessor:
             # Step 6: Return the results in a structured dictionary
             return {
                 "summary": llm_results["summaries"],  # Extracted sections of the document
-                "Keywords": combined_keywords,  # Combined keywords from all methods
+                "Keywords": combined_keywords,           
+                "Figures": figures 
+            
             }
     
         except Exception as e:
