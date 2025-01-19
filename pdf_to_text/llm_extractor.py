@@ -59,7 +59,7 @@ class SummarizerAgent(LLMAgent):
             messages=self.message_template,
             temperature=temperature,
             stop=stop,
-            max_tokens=10000
+            max_tokens=14000
 
         )
         return response.choices[0].message.content.strip()
@@ -88,7 +88,11 @@ class KeyExtractorLLM(LLMAgent):
 
         Keywords:"""
 
-        self.key_extractor = KeyLLM(keybert_openai(self.client, prompt=DEFAULT_PROMPT))
+        self.key_extractor = KeyLLM(keybert_openai(self.client,
+                                                   prompt=DEFAULT_PROMPT,
+                                                   max_tokens=14000,
+                                                )
+        )
 
     def infer(self, text: str):
         # Use the KeyLLM instance to extract keywords
