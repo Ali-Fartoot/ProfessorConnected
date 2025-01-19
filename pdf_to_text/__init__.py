@@ -142,14 +142,17 @@ class AuthorDocumentProcessor:
             )
             
             figures_keywords_llm = self.keywords_expander.infer(" ".join(figures))
-            if isinstance(figures_keywords_llm, list):
-                figures_keywords_llm = " ".join(figures_keywords_llm)
-            elif isinstance(figures_keywords_llm, str):
-                figures_keywords_llm = figures_keywords_llm
-            else:
-                raise f"Invalid type {type(figures_keywords_llm)}"
 
-            filterd_keywords = self.keywords_expander.infer(figures_keywords_llm+ combined_keywords)
+            if isinstance(figures_keywords_llm, list):
+                figures_keywords_llm = ", ".join(figures_keywords_llm)
+
+
+
+            filterd_keywords = self.keywords_expander.infer(figures_keywords_llm + combined_keywords)
+            print(figures_keywords_llm)
+            print(combined_keywords)
+            print("=============================")
+
             # Step 6: Return the results in a structured dictionary
             return {
                 "summary": llm_results["summaries"],  
