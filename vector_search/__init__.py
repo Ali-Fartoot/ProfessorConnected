@@ -80,7 +80,7 @@ class ProfessorResearchProfile:
         all_titles = []
         for paper in papers:
             all_titles.append(paper["title"])
-            all_keywords.extend([k.strip() for k in paper['Keywords'].split(',')])
+            all_keywords.extend([k.strip() for k in paper['keywords'].split(',')])
             all_summaries.append(paper['summary'])
 
         keyword_freq = Counter(all_keywords)
