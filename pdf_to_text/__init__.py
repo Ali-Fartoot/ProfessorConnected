@@ -24,7 +24,7 @@ class AuthorDocumentProcessor:
         self.keywords_expander = KeyExtractorLLM()
 
     def _section_chunker(self, text: str, symbol: str = "## ", 
-                        sections={"start": ['Introduction', 'Abstract'], "end": ["Conclusion", "Discussion", "Future Works", "Future Work"]}) -> list:
+                        sections={"start": ['Introduction'], "end": ["Conclusion", "Discussion", "Future Works", "Future Work"]}) -> list:
         """
         Extract specific sections from the text and find figure captions with descriptions.
         
