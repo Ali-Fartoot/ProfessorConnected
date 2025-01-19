@@ -142,7 +142,7 @@ class AuthorDocumentProcessor:
             )
             
             figures_keywords_llm = self.keywords_expander.infer(" ".join(figures))
-            filterd_keywords = self.keywords_expander.infer(figures_keywords_llm + combined_keywords)
+            filterd_keywords = self.keywords_expander.infer(" ".join(figures_keywords_llm) + combined_keywords)
             # Step 6: Return the results in a structured dictionary
             return {
                 "summary": llm_results["summaries"],  
