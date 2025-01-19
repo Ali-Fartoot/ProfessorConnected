@@ -14,7 +14,7 @@ class LLMAgent(ABC):
     @abstractmethod
     def infer(self, 
               temperature: float = 0.9,
-              max_token: int = 500,
+              max_token: int = 14000,
               n: int = 1,
               stop: str = None) -> any:
         """
@@ -90,7 +90,6 @@ class KeyExtractorLLM(LLMAgent):
 
         self.key_extractor = KeyLLM(keybert_openai(self.client,
                                                    prompt=DEFAULT_PROMPT,
-                                                   max_tokens=14000,
                                                 )
         )
 
