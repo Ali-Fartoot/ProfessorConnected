@@ -141,11 +141,17 @@ class AuthorDocumentProcessor:
                 llm_results["keywords"]
             )
             
+
+            
+            figures_keyword_llm = self.keywords_expander(" ".join(figures))
+            figures_keyword = self.keyword_extractor(" ".join(figures))
+            
             # Step 6: Return the results in a structured dictionary
             return {
                 "summary": llm_results["summaries"],  # Extracted sections of the document
                 "Keywords": combined_keywords,           
-                "Figures": figures 
+                "figures_llm": figures_keyword_llm,
+                "figures": figures_keyword,
             
             }
     

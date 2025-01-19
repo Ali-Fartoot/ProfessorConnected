@@ -6,12 +6,13 @@ from vector_search import cleanup_database, add_professor, find_similar_professo
 from vector_search.visulizer import ProfessorVisualizer
 start = time.time()
 
-professor = ["Manuel Cebrian", "Majid Nili Ahmadabadi","Mohammad Noorchenarboo","Yongfan Lai",
-             "Kai Li", "Tian Lan", "Hani S. Mahmassani", "Sven Klaassen",
-             "Kenichi Shimizu", " Andrey Ramos", "Wei Zhao", "Matt Schwartz",
-             "Nobutaka Ono", "Bodong Shang",
-             "F. Javier López-Martínez", "Meng-Xing Tang", "Geoffrey Ye Li","Ilya Sutskever"
-             "Andrew Ng","Babak Nadjar Araabi", "Mohammad Abu Tami", "Li Weigang", "David Silver", "Pieter Abbeel", "Sergey Levine"]
+professor = ["Manuel Cebrian", "Pieter Abbeel", "Sergey Levine"]
+# professor = ["Manuel Cebrian", "Majid Nili Ahmadabadi","Mohammad Noorchenarboo","Yongfan Lai",
+#              "Kai Li", "Tian Lan", "Hani S. Mahmassani", "Sven Klaassen",
+#              "Kenichi Shimizu", " Andrey Ramos", "Wei Zhao", "Matt Schwartz",
+#              "Nobutaka Ono", "Bodong Shang",
+#              "F. Javier López-Martínez", "Meng-Xing Tang", "Geoffrey Ye Li","Ilya Sutskever"
+#              "Andrew Ng","Babak Nadjar Araabi", "Mohammad Abu Tami", "Li Weigang", "David Silver", "Pieter Abbeel", "Sergey Levine"]
 
 # Process all professors
 for name in professor:
