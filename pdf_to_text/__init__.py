@@ -61,7 +61,7 @@ class AuthorDocumentProcessor:
                         
 
         
-        assert len(chunks) == 2, f"Internal: Number of elements in returned chunks in parser isn't 2, {len(chunks)}"
+        assert len(chunks) == 2, f"Internal: Number of elements in returned chunks in parser isn't 2, {len(chunks), chunks}"
         
         return chunks, figures
 

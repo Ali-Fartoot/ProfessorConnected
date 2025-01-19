@@ -10,6 +10,7 @@ install:
 run:
 	@echo "Starting LLM server..."
 	. ./venv/bin/activate && $(PYTHON) -m llama_cpp.server --port 5333  \
+	 	--n_ctx 14000 \
 		$(if $(filter true,$(USE_GPU)),--n_gpu_layers 16,--n_gpu_layers 0) \
 		--model ./models/Mistral-Nemo-Prism-12B-Q6_K.gguf \
 		--chat_format mistral-instruct > llm.log 
