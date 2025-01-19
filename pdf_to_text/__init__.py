@@ -153,8 +153,7 @@ class AuthorDocumentProcessor:
             # Step 6: Return the results in a structured dictionary
             return {
                 "summary": llm_results["summaries"],  
-                "Keywords": combined_keywords,           
-                "figures_llm": filterd_keywords,
+                "Keywords": filterd_keywords,           
             
             }
     
