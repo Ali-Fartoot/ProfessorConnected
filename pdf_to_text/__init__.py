@@ -61,53 +61,43 @@ class AuthorDocumentProcessor:
                     if section.lower() in chunk[:30].lower():
                         chunks.append(chunk)
                         found_end = True
-                        break  # Stop checking "end" sections once one is found
+                        break  
             
-            # Find figure captions
             figure_matches = figure_pattern.finditer(chunk)
             for match in figure_matches:
                 figure_text = match.group(1).strip()
                 figures.append(figure_text)
-        
-        # Ensure exactly two chunks are found (one from "start" and one from "end")
-        assert len(chunks) == 2, f"Internal: Number of elements in returned chunks in parser isn't 2, {len(chunks), [ x[:30] for x in chunks ]}"
-        
+                
         return chunks, figures
-    def _process_text_with_llm(self, text: str, sections: list) -> dict:
+    
+    def _process_text(self, figure: list,sections: list) -> dict:
         """
         Process text using LLM agents for summarization and keyword extraction.
         """
         try:
             # Extract keywords from sections
-            introduction_keywords = [i[0] for i in self.key_extractor.extract_keywords(sections[0])]
-            conclusion_keywords = [i[0] for i in self.key_extractor.extract_keywords(sections[1])]
-            # Get expanded keywords
-            expanded_intro = self.keywords_expander.infer(sections[0])
-            expanded_conclusion = self.keywords_expander.infer(sections[1])
+            papers_digest = " ".join(sections)
+            figures_digest = ", ".join(figure) 
+            traditional_keywords = [i[0] for i in self.key_extractor.extract_keywords(papers_digest)]
+            llm_keywords = self.keywords_expander.infer(papers_digest)
+            fugures_llm = self.keywords_expander.infer(figures_digest)
+
+            if isinstance(traditional_keywords, list):
+                traditional_keywords = " ".join(traditional_keywords)
             
-            # Combine all keywords
-            all_keywords = (
-                [i[0] for i in self.keywords_expander.infer(" ".join(introduction_keywords))]+
-                [i[0] for i in self.keywords_expander.infer(" ".join(conclusion_keywords))]+
-                (expanded_intro if isinstance(expanded_intro, list) else [expanded_intro]) +
-                (expanded_conclusion if isinstance(expanded_conclusion, list) else [expanded_conclusion])
-            )
-            
-            # Flatten the list and remove None values
-            flattened_keywords = []
-            for item in all_keywords:
-                if item is not None:
-                    if isinstance(item, list):
-                        flattened_keywords.extend(item)
-                    else:
-                        flattened_keywords.append(item)
-            
-            # Remove duplicates while preserving order
-            unique_keywords = list(dict.fromkeys(flattened_keywords))
+            if isinstance(llm_keywords, list):
+                llm_keywords = " ".join(llm_keywords)
+
+            if isinstance(llm_keywords, list):
+                figures_digest = " ".join(figures_digest)
+
+            all_keywords  = figures_digest + llm_keywords + traditional_keywords
+            unique_keywords = ", ".join(set(all_keywords ))
+
             
             return {
-                "summaries": self.summarizer.infer("\n".join(sections)),
-                "keywords": ", ".join(unique_keywords)
+                "summaries": self.summarizer.infer(papers_digest),
+                "keywords":unique_keywords
             }
             
         except Exception as e:
@@ -128,38 +118,14 @@ class AuthorDocumentProcessor:
             
         """
         try:
-            # Step 1: Convert the document to markdown
             result = self.document_converter.convert(file_path)
             markdown_text = result.document.export_to_markdown()
-            
-            # Step 2: Extract sections from the markdown text
             selected_text, figures = self._section_chunker(text=markdown_text)
-            
-            # Step 3: Extract keywords using traditional methods
-            overall_keywords = self.keyword_extractor.extract_keywords(markdown_text)
-            section_keywords = self.keyword_extractor.extract_keywords('\n'.join(selected_text))
-            
-            # Step 4: Perform LLM processing on the text
-            llm_results = self._process_text_with_llm(markdown_text, selected_text)
-            
-            # Step 5: Combine all keywords into a unified string
-            combined_keywords = (
-                ", ".join([kw[0] for kw in overall_keywords]) + ", " +
-                ", ".join([kw[0] for kw in section_keywords]) + ", " +
-                llm_results["keywords"]
-            )
-            
-            figures_keywords_llm = self.keywords_expander.infer(" ".join(figures))
+            llm_results = self._process_text(figures ,selected_text)
 
-            if isinstance(figures_keywords_llm, list):
-                figures_keywords_llm = ", ".join(figures_keywords_llm)
-
-            filterd_keywords = self.keywords_expander.infer(figures_keywords_llm + combined_keywords)
-            # Step 6: Return the results in a structured dictionary
             return {
                 "summary": llm_results["summaries"],  
-                "Keywords": filterd_keywords,           
-            
+                "keywords": llm_results["keywords"],           
             }
     
         except Exception as e:
