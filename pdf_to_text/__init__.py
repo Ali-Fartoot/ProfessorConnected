@@ -24,7 +24,7 @@ class AuthorDocumentProcessor:
         self.keywords_expander = KeyExtractorLLM()
 
     def _section_chunker(self, text: str, symbol: str = "## ", 
-                        sections={"start": ['Introduction'], "end": ["Conclusion", "Discussion", "Future Works", "Future Work"]}) -> list:
+                        sections={"start": ['Introduction', 'Abstract'], "end": ["Conclusion", "Discussion", "Future Works", "Future Work"]}) -> list:
         """
         Extract specific sections from the text and find figure captions with descriptions.
         
@@ -142,7 +142,14 @@ class AuthorDocumentProcessor:
             )
             
             figures_keywords_llm = self.keywords_expander.infer(" ".join(figures))
-            filterd_keywords = self.keywords_expander.infer(" ".join(figures_keywords_llm) + combined_keywords)
+            if isinstance(figures_keywords_llm, list):
+                figures_keywords_llm = " ".join(figures_keywords_llm)
+            elif isinstance(figures_keywords_llm, str):
+                figures_keywords_llm = figures_keywords_llm
+            else:
+                raise f"Invalid type {type(figures_keywords_llm)}"
+
+            filterd_keywords = self.keywords_expander.infer(figures_keywords_llm+ combined_keywords)
             # Step 6: Return the results in a structured dictionary
             return {
                 "summary": llm_results["summaries"],  
