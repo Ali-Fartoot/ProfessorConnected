@@ -24,7 +24,7 @@ class AuthorDocumentProcessor:
         self.keywords_expander = KeyExtractorLLM()
 
     def _section_chunker(self, text: str, symbol: str = "## ", 
-                        sections={"start": ['Introduction'], "end": ["Conclusion", "Discussion", "Future Works", "Future Work"]}) -> list:
+                        sections={"start": ['Introduction', "Abstract"], "end": ["Conclusion", "Discussion", "Future Works", "Future Work"]}) -> list:
         """
         Extract specific sections from the text and find figure captions with descriptions.
         
@@ -44,27 +44,35 @@ class AuthorDocumentProcessor:
         figure_pattern = re.compile(r'(?i)(fig(?:ure)?\.?\s*\d+[.:]\s*.*?)(?:\n\n|\Z)', re.DOTALL)
         
         for chunk in text_chunks:
-            # Find sections
-            for part in sections.keys():
-                find_part = False
-                for section in sections[part]:
+            # Flag to track if a section from "start" or "end" has been found
+            found_start = False
+            found_end = False
+            
+            # Check for sections in "start"
+            for section in sections["start"]:
+                if section.lower() in chunk[:30].lower():
+                    chunks.append(chunk)
+                    found_start = True
+                    break  # Stop checking "start" sections once one is found
+            
+            # Check for sections in "end" only if no "start" section was found
+            if not found_start:
+                for section in sections["end"]:
                     if section.lower() in chunk[:30].lower():
                         chunks.append(chunk)
-                        find_part = True
-                    
-                    if find_part: break
+                        found_end = True
+                        break  # Stop checking "end" sections once one is found
             
+            # Find figure captions
             figure_matches = figure_pattern.finditer(chunk)
             for match in figure_matches:
                 figure_text = match.group(1).strip()
                 figures.append(figure_text)
-                        
-
         
+        # Ensure exactly two chunks are found (one from "start" and one from "end")
         assert len(chunks) == 2, f"Internal: Number of elements in returned chunks in parser isn't 2, {len(chunks), [ x[:30] for x in chunks ]}"
         
         return chunks, figures
-
     def _process_text_with_llm(self, text: str, sections: list) -> dict:
         """
         Process text using LLM agents for summarization and keyword extraction.
@@ -146,13 +154,7 @@ class AuthorDocumentProcessor:
             if isinstance(figures_keywords_llm, list):
                 figures_keywords_llm = ", ".join(figures_keywords_llm)
 
-
-
             filterd_keywords = self.keywords_expander.infer(figures_keywords_llm + combined_keywords)
-            print(figures_keywords_llm)
-            print(combined_keywords)
-            print("=============================")
-
             # Step 6: Return the results in a structured dictionary
             return {
                 "summary": llm_results["summaries"],  
