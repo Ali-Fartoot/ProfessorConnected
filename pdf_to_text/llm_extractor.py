@@ -52,8 +52,23 @@ class SummarizerAgent(LLMAgent):
               stop: str = None,
               ) -> str:
 
-        self.message_template[1]["content"] = f'''Your task is to create concise, accurate summaries. Please point at techniques by considering keywords. The summerization should have two part introduction and conclusion. but don't mention that by exact world
-                                                The text: {text}, The summarization:'''
+        self.message_template[1]["content"] = f'''Analyze and summarize the following text with these guidelines:
+
+            1. Begin with a broad overview that captures the main context and purpose
+            2. Extract and highlight key concepts, using bullet points or clear separation
+            3. Identify important technical terms, methodologies, or frameworks
+            4. Present the core findings, results, or conclusions
+            5. Maintain logical flow and connections between ideas
+            6. Use clear, precise language while preserving technical accuracy
+            7. Keep the summary focused and eliminate redundant information
+            8. Aim for approximately 25-30% of the original text length
+
+            Text to summarize:
+            {text}
+
+            Provide your summary:'''
+        
+
         response = self.client.chat.completions.create(
             model="local-model",
             messages=self.message_template,
@@ -72,6 +87,9 @@ class KeyExtractorLLM(LLMAgent):
         DEFAULT_PROMPT = """
         The following is a list of documents. Please extract the top keywords, separated by a comma, that describe the topic of the texts.
         Note Please remove specific name such as Person, Oragazonation, Country etc.
+        Note remove duplicated keyword.
+        Expand Keyword by combining the gien keywords. Note than you can even mention the topics.
+        Remove numbers.
 
         Document:
         - Traditional diets in most cultures were primarily plant-based with a little meat on top, but with the rise of industrial style meat production and factory farming, meat has become a staple food.

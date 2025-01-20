@@ -6,13 +6,12 @@ from vector_search import cleanup_database, add_professor, find_similar_professo
 from vector_search.visulizer import ProfessorVisualizer
 start = time.time()
 
-professor = ["Manuel Cebrian", "Pieter Abbeel", "Sergey Levine"]
-# professor = ["Manuel Cebrian", "Majid Nili Ahmadabadi","Mohammad Noorchenarboo","Yongfan Lai",
-#              "Kai Li", "Tian Lan", "Hani S. Mahmassani", "Sven Klaassen",
-#              "Kenichi Shimizu", " Andrey Ramos", "Wei Zhao", "Matt Schwartz",
-#              "Nobutaka Ono", "Bodong Shang",
-#              "F. Javier López-Martínez", "Meng-Xing Tang", "Geoffrey Ye Li","Ilya Sutskever"
-#              "Andrew Ng","Babak Nadjar Araabi", "Mohammad Abu Tami", "Li Weigang", "David Silver", "Pieter Abbeel", "Sergey Levine"]
+professor = ["Manuel Cebrian","Mohammad Noorchenarboo","Yongfan Lai",
+             "Kai Li", "Tian Lan", "Hani S. Mahmassani", "Sven Klaassen",
+             "Kenichi Shimizu", " Andrey Ramos", "Wei Zhao", "Matt Schwartz",
+             "Nobutaka Ono", "Bodong Shang",
+             "F. Javier López-Martínez", "Meng-Xing Tang", "Geoffrey Ye Li","Ilya Sutskever"
+             "Andrew Ng", "Mohammad Abu Tami", "Li Weigang", "David Silver", "Pieter Abbeel", "Sergey Levine"]
 
 # Process all professors
 for name in professor:
@@ -23,7 +22,7 @@ for name in professor:
 
     # Step 1: Crawl papers
     if not os.path.exists(data_path):
-        crawl(name, number_of_articles=4)
+        crawl(name, number_of_articles=3)
         print("Crawling completed.")
     else:
         print("The author papers already exist.")
@@ -46,8 +45,8 @@ for name in professor:
 # Visualization after all professors are processed
 visualizer = ProfessorVisualizer()
 image = visualizer.save_figures(
-    professor_name="Majid Nili Ahmadabadi",
-    output_dir="data/Majid Nili Ahmadabadi",  
+    professor_name="Sergey Levine",
+    output_dir="data/Sergey Levine",  
     format="png",
     limit=5
 )
