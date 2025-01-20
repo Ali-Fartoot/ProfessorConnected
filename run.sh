@@ -1,18 +1,19 @@
 #!/bin/bash
-curl -X 'POST' \
-  'http://127.0.0.1:5333/v1/chat/completions' \
-  -H 'accept: application/json' \
-  -H 'Content-Type: application/json' \
-  -d '{
-  "max_tokens": 200,
-  "messages": [
-    {
-      "content": "You are a helpful assistant.",
-      "role": "system"
-    },
-    {
-      "content": "Write a poem for France?",
-      "role": "user"
-    }
-  ]
-}'
+
+# Add professor
+# curl -X POST "http://localhost:8000/add_professor" \
+#      -H "Content-Type: application/json" \
+#      -d '{"name": "Andrew Ng", "number_of_articles": 3}'
+
+# Search with visualization
+curl -X POST "http://localhost:8000/search_with_visualization" \
+     -H "Content-Type: application/json" \
+     -d '{"professor_name": "Sergey Levine", "limit": 5, "min_similarity": 0.1}'
+
+# Search without visualization
+# curl -X POST "http://localhost:8000/search" \
+#      -H "Content-Type: application/json" \
+#      -d '{"professor_name": "Sergey Levine", "min_similarity": 0.1, "limit": 5}'
+
+# Cleanup database
+# curl -X DELETE "http://localhost:8000/cleanup_database"

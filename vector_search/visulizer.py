@@ -18,20 +18,18 @@ class ProfessorVisualizer:
         self.path = path
         self.colors = px.colors.qualitative.Set3
 
-    def create_network_graph(self, professor_name: str, limit: int = 5):
+    def create_network_graph(self, professor_name: str, limit: int = 5, min_similarity= 0.1):
         """
-        Create an interactive network graph showing only the query professor
+        Create an interactive network graph showing the query professor
         and their most similar professors
         """
         with ProfessorResearchProfile(path=self.path) as profile_system:
-            # Get similar professors using hybrid search
-            similar_profs = profile_system.hybrid_search(
-                text_query=professor_name,  # Using professor name as query
-                limit=limit
+            # Get similar professors using hybrid search by professor
+            similar_profs = profile_system.hybrid_search_by_professor(
+                professor_name=professor_name,
+                limit=limit,
+                min_similarity=min_similarity
             )
-            
-            # Get central professor's data
-            central_prof_data = profile_system.get_professor_stats(professor_name)
 
         G = nx.Graph()
 
@@ -39,7 +37,7 @@ class ProfessorVisualizer:
         G.add_node(professor_name,
                   size=30,
                   color=self.colors[0],
-                  keywords=central_prof_data['top_keywords'])
+                  keywords=[])  # Will be filled with top keywords
 
         # Add similar professors as nodes and create edges
         for i, prof in enumerate(similar_profs):
@@ -48,7 +46,7 @@ class ProfessorVisualizer:
                           size=20,
                           color=self.colors[i + 1],
                           keywords=prof['top_keywords'],
-                          matching_keywords=prof['matching_keywords'])
+                          shared_keywords=prof['shared_top_keywords'])
                 
                 G.add_edge(professor_name, 
                           prof['name'],
@@ -90,16 +88,13 @@ class ProfessorVisualizer:
             node_y.append(y)
             
             if node == professor_name:
-                node_text.append(
-                    f"Professor: {node}<br>"
-                    f"Top Keywords: {', '.join(G.nodes[node]['keywords'])}"
-                )
+                node_text.append(f"Professor: {node}")
             else:
-                matching_keywords = G.nodes[node].get('matching_keywords', [])
+                shared_keywords = G.nodes[node].get('shared_keywords', [])
                 node_text.append(
                     f"Professor: {node}<br>"
                     f"Top Keywords: {', '.join(G.nodes[node]['keywords'])}<br>"
-                    f"Matching Keywords: {', '.join(matching_keywords)}<br>"
+                    f"Shared Keywords: {', '.join(shared_keywords)}<br>"
                     f"Similarity Score: {G.edges[(professor_name, node)]['weight']:.3f}"
                 )
             
@@ -118,7 +113,7 @@ class ProfessorVisualizer:
                 color=node_colors,
                 line_width=2))
 
-        # Create the figure with a larger size
+        # Create the figure
         fig = go.Figure(data=[edges_trace, nodes_trace],
                        layout=go.Layout(
                            title=f'Research Similarity Network for {professor_name}',
@@ -138,8 +133,8 @@ class ProfessorVisualizer:
         Create a heatmap showing similarities between professors
         """
         with ProfessorResearchProfile(path=self.path) as profile_system:
-            similar_profs = profile_system.hybrid_search(
-                text_query=professor_name,
+            similar_profs = profile_system.hybrid_search_by_professor(
+                professor_name=professor_name,
                 limit=limit
             )
 
@@ -173,23 +168,20 @@ class ProfessorVisualizer:
 
         return fig
 
-    def save_figures(self, professor_name: str, output_dir: str = "./figures", 
-                    format: str = "png", limit: int = 5):
+    def save_figures(self, professor_name: str, 
+                    output_dir: str = "./figures", 
+                    format: str = "png", 
+                    limit: int = 5,
+                    min_similarity=0.1):
         """
         Generate and save all visualization figures
         """
         os.makedirs(output_dir, exist_ok=True)
         
-        network_fig = self.create_network_graph(professor_name, limit=limit)
+        network_fig = self.create_network_graph(professor_name, limit=limit, min_similarity=min_similarity)
         network_path = os.path.join(output_dir, 
                                   f"network_{professor_name}.{format}")
         network_fig.write_image(network_path)
         print(f"Network graph saved to: {network_path}")
         
-        heatmap_fig = self.create_similarity_heatmap(professor_name, limit=limit)
-        heatmap_path = os.path.join(output_dir, 
-                                   f"heatmap_{professor_name}.{format}")
-        heatmap_fig.write_image(heatmap_path)
-        print(f"Heatmap saved to: {heatmap_path}")
-        
-        return network_fig, heatmap_fig
+        return network_path
