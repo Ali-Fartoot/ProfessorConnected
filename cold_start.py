@@ -2,7 +2,7 @@ from crawler import crawl
 from pdf_to_text import AuthorDocumentProcessor
 import os
 import time
-from vector_search import cleanup_database, add_professor,  find_hybrid_search_professors
+from vector_search import add_professor
 from vector_search.visulizer import ProfessorVisualizer
 
 professor = ["Manuel Cebrian","Mohammad Noorchenarboo","Yongfan Lai",
@@ -39,12 +39,3 @@ for name in professor:
     else:
         print("Document processing failed, professor not added to database.")
 
-# Visualization after all professors are processed
-visualizer = ProfessorVisualizer()
-image = visualizer.save_figures(
-    professor_name="Sergey Levine",
-    output_dir="data/Sergey Levine",  
-    format="png",
-    limit=5, 
-    min_similarity=0.1
-)
