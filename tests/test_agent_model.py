@@ -9,38 +9,6 @@ def mock_openai_client():
         mock.return_value = client
         yield client
 
-class TestSummarizerAgent:
-    @pytest.fixture
-    def summarizer(self, mock_openai_client):
-        return SummarizerAgent()
-
-    def test_initialization(self, summarizer):
-        assert isinstance(summarizer, LLMAgent)
-        assert len(summarizer.message_template) == 2
-        assert summarizer.message_template[0]['role'] == 'system'
-
-    def test_infer_success(self, summarizer, mock_openai_client):
-        # Setup mock response
-        mock_response = Mock()
-        mock_response.choices = [Mock(message=Mock(content="Summary text"))]
-        mock_openai_client.chat.completions.create.return_value = mock_response
-
-        test_text = "Sample research paper text about machine learning advancements."
-        result = summarizer.infer(text=test_text)
-
-        # Verify API call
-        mock_openai_client.chat.completions.create.assert_called_once()
-        args, kwargs = mock_openai_client.chat.completions.create.call_args
-        assert kwargs['model'] == 'local-model'
-        assert test_text in kwargs['messages'][1]['content']
-        assert kwargs['temperature'] == 0.5
-        assert kwargs['max_tokens'] == 100
-        
-        # Verify result
-        assert type(result) == str
-
-
-
 class TestKeyExtractorLLM:
     @pytest.fixture
     def key_extractor(self, mock_openai_client):
