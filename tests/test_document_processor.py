@@ -23,7 +23,7 @@ def mock_document_converter():
 
 @pytest.fixture
 def mock_llm_agents():
-    with patch('llm.SummarizerAgent') as mock_summarizer, \
+    with patch('llm_extractor.SummarizerAgent') as mock_summarizer, \
          patch('KeyBERT') as mock_keybert, \
          patch('llm_extractor.KeyExtractorLLM') as mock_key_expander:
         

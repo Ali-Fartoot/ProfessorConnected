@@ -11,7 +11,7 @@ def mock_arxiv():
          patch('crawler.utils.convert_to_arxiv_query') as mock_convert:
         
         # Setup mock return values
-        mock_convert.return_value = "test_query"
+        mock_convert.return_value = "Nathan Lambert"
         mock_article = MagicMock()
         mock_article.__getitem__.side_effect = lambda key: {
             "id": "1234.5678v9",
@@ -19,7 +19,16 @@ def mock_arxiv():
         }.get(key)
         
         mock_query.return_value = [mock_article]
-        mock_download.return_value = None
+        
+        # Simulate PDF creation when download is called
+        def mock_download_effect(articles, path):
+            os.makedirs(path, exist_ok=True)
+            # Create a dummy PDF file
+            pdf_path = os.path.join(path, "1234.5678v9.pdf")
+            with open(pdf_path, 'w') as f:
+                f.write("dummy pdf content")
+        
+        mock_download.side_effect = mock_download_effect
         
         yield {
             "query": mock_query,
@@ -36,6 +45,15 @@ def test_successful_crawl(tmp_path, mock_arxiv):
     crawl(test_name, number_of_articles=1)
     
     # Assert
+    # Check if directory was created
+    assert expected_dir.exists()
+    assert expected_dir.is_dir()
+    
+    # Check if PDF file exists in the directory
+    pdf_files = list(expected_dir.glob("*.pdf"))
+    assert len(pdf_files) == 1
+
+    # Verify mock calls
     mock_arxiv['convert'].assert_called_once_with(test_name)
     mock_arxiv['query'].assert_called_once_with(
         search_query="test_query",
@@ -46,7 +64,6 @@ def test_successful_crawl(tmp_path, mock_arxiv):
         mock_arxiv['query'].return_value[:1],
         path=str(expected_dir)
     )
-    
 
 def test_no_articles_found(mock_arxiv):
     # Arrange
@@ -58,4 +75,3 @@ def test_no_articles_found(mock_arxiv):
     
     assert "No articles to download" in str(exc_info.value)
     mock_arxiv['download'].assert_not_called()
-
