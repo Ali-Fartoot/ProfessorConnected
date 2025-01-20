@@ -80,20 +80,23 @@ class AuthorDocumentProcessor:
             figures_digest = ", ".join(figure) 
             traditional_keywords = [i[0] for i in self.key_extractor.extract_keywords(papers_digest)]
             llm_keywords = self.keywords_expander.infer(papers_digest)
-            fugures_llm = self.keywords_expander.infer(figures_digest)
-
+            figures_llm = self.keywords_expander.infer(figures_digest)
+            print("figures_llm, llm_keywords, traditional_keywords: ", type(figures_llm), type(llm_keywords), type(traditional_keywords))
             if isinstance(traditional_keywords, list):
                 traditional_keywords = " ".join(traditional_keywords)
             
             if isinstance(llm_keywords, list):
                 llm_keywords = " ".join(llm_keywords)
 
-            if isinstance(fugures_llm, list):
-                fugures_llm = " ".join(fugures_llm)
+            if isinstance(figures_llm, list):
+                figures_llm = " ".join(figures_llm)
 
-            all_keywords = traditional_keywords + " " + llm_keywords + " " + fugures_llm
+            all_keywords = traditional_keywords + " " + llm_keywords + " " + figures_llm
             unique_keywords = ", ".join(set(all_keywords.split()))
-
+            print("--------------------------------------------------------------")
+            print("figures_llm, llm_keywords, traditional_keywords: ", type(figures_llm), type(llm_keywords), type(traditional_keywords))
+            print("unique_keywords, all_keywords: ", type(unique_keywords), type(all_keywords))
+            print("=================================================================")
             return {
                 "summaries": self.summarizer.infer(papers_digest),
                 "keywords": unique_keywords
