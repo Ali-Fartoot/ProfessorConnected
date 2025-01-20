@@ -3,6 +3,7 @@ import os
 import json
 from unittest.mock import Mock, patch, MagicMock
 from pdf_to_text import AuthorDocumentProcessor  # Replace with actual module name
+from keybert import KeyBERT
 
 @pytest.fixture
 def mock_document_converter():
@@ -22,9 +23,9 @@ def mock_document_converter():
 
 @pytest.fixture
 def mock_llm_agents():
-    with patch('your_module.SummarizerAgent') as mock_summarizer, \
-         patch('your_module.KeyBERT') as mock_keybert, \
-         patch('your_module.KeyExtractorLLM') as mock_key_expander:
+    with patch('llm.SummarizerAgent') as mock_summarizer, \
+         patch('KeyBERT') as mock_keybert, \
+         patch('llm_extractor.KeyExtractorLLM') as mock_key_expander:
         
         mock_summarizer_instance = Mock()
         mock_summarizer_instance.infer.return_value = "Sample summary about AI and ML techniques"
