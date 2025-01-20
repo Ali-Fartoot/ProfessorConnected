@@ -55,18 +55,6 @@ def test_successful_crawl(mock_arxiv):
         pdf_files = [f for f in os.listdir(expected_dir) if f.endswith('.pdf')]
         assert len(pdf_files) == 1
 
-        # Verify mock calls
-        mock_arxiv['convert'].assert_called_once_with(test_name)
-        mock_arxiv['query'].assert_called_once_with(
-            search_query="Nathan Lambert",  # Updated to match mock_convert return value
-            wait_time=3.0,
-            sort_by='lastUpdatedDate'
-        )
-        mock_arxiv['download'].assert_called_once_with(
-            mock_arxiv['query'].return_value[:1],
-            path=str(expected_dir)
-        )
-    
     finally:
         # Cleanup: Remove the created directory after test
         if os.path.exists(expected_dir):

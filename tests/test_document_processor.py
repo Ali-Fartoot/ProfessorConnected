@@ -24,7 +24,7 @@ def mock_document_converter():
 @pytest.fixture
 def mock_llm_agents():
     with patch('pdf_to_text.llm_extractor.SummarizerAgent') as mock_summarizer, \
-         patch('KeyBERT') as mock_keybert, \
+         patch('keybert.KeyBERT') as mock_keybert, \
          patch('pdf_to_text.llm_extractor.KeyExtractorLLM') as mock_key_expander:
         
         mock_summarizer_instance = Mock()
