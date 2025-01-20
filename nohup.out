@@ -1,0 +1,31 @@
+. ./venv/bin/activate && python3 app.py
+/home/jupyter-user2/ProfessorConnected/venv/lib/python3.12/site-packages/arxivpy-0.1.dev0-py3.12.egg/arxivpy/arxiv.py:109: SyntaxWarning: "is not" with 'str' literal. Did you mean "!="?
+/home/jupyter-user2/ProfessorConnected/venv/lib/python3.12/site-packages/arxivpy-0.1.dev0-py3.12.egg/arxivpy/arxiv.py:109: SyntaxWarning: "is not" with 'str' literal. Did you mean "!="?
+/home/jupyter-user2/ProfessorConnected/venv/lib/python3.12/site-packages/torch/utils/cpp_extension.py:1964: UserWarning: TORCH_CUDA_ARCH_LIST is not set, all archs for visible cards are included for compilation. 
+If this is not desired, please set os.environ['TORCH_CUDA_ARCH_LIST'].
+  warnings.warn(
+Renamed: 2501.06137v1.pdf -> Supervision policies can shape long-term risk management in   general-purpose AI models.pdf
+Renamed: 2412.14210v1.pdf -> Mobilizing Waldo_ Evaluating Multimodal AI for Public Mobilization.pdf
+Renamed: 2409.01247v3.pdf -> Conversational Complexity for Assessing Risk in Large Language Models.pdf
+Renamed: 2411.08003v1.pdf -> Can adversarial attacks by large language models be attributed_.pdf
+Renamed: 2405.12764v2.pdf -> Detecting and Mitigating Bias in Algorithms Used to Disseminate   Information in Social Networks.pdf
+Renamed: 2410.09698v1.pdf -> Incentivized Network Dynamics in Digital Job Recruitment.pdf
+Renamed: 2307.01891v1.pdf -> Are machine learning technologies ready to be used for humanitarian work   and development_.pdf
+Renamed: 2102.10539v2.pdf -> Social Diffusion Sources Can Escape Detection.pdf
+Renamed: 2103.11225v1.pdf -> The Network Limits of Infectious Disease Control via Occupation-Based   Targeting.pdf
+Renamed: 2102.13349v1.pdf -> Contact Tracing_ Computational Bounds_ Limitations and Implications.pdf
+Crawling completed.
+Terminated
+make: *** [Makefile:22: request] Error 143
+. ./venv/bin/activate && python3 app.py
+/home/jupyter-user2/ProfessorConnected/venv/lib/python3.12/site-packages/arxivpy-0.1.dev0-py3.12.egg/arxivpy/arxiv.py:109: SyntaxWarning: "is not" with 'str' literal. Did you mean "!="?
+/home/jupyter-user2/ProfessorConnected/venv/lib/python3.12/site-packages/arxivpy-0.1.dev0-py3.12.egg/arxivpy/arxiv.py:109: SyntaxWarning: "is not" with 'str' literal. Did you mean "!="?
+/home/jupyter-user2/ProfessorConnected/venv/lib/python3.12/site-packages/torch/utils/cpp_extension.py:1964: UserWarning: TORCH_CUDA_ARCH_LIST is not set, all archs for visible cards are included for compilation. 
+If this is not desired, please set os.environ['TORCH_CUDA_ARCH_LIST'].
+  warnings.warn(
+Renamed: 2501.06137v1.pdf -> Supervision policies can shape long-term risk management in   general-purpose AI models.pdf
+Renamed: 2412.14210v1.pdf -> Mobilizing Waldo_ Evaluating Multimodal AI for Public Mobilization.pdf
+Renamed: 2409.01247v3.pdf -> Conversational Complexity for Assessing Risk in Large Language Models.pdf
+Renamed: 2411.08003v1.pdf -> Can adversarial attacks by large language models be attributed_.pdf
+Crawling completed.
+make: *** [Makefile:22: request] Terminated
