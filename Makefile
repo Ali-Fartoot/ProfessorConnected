@@ -12,7 +12,7 @@ run:
 		--n_ctx 14000 \
 		$(if $(filter true,$(USE_GPU)),--n_gpu_layers 16,--n_gpu_layers 0) \
 		--model ./models/Mistral-Nemo-Prism-12B-Q6_K.gguf \
-		--chat_format mistral-instruct > llm.log & \
+		--chat_format mistral-instruct > llm.log 
 	@echo "Starting FastAPI server..."
 	. ./venv/bin/activate && $(PYTHON) -m uvicorn app:app --host 0.0.0.0 --port 8000
 
