@@ -94,10 +94,14 @@ class AuthorDocumentProcessor:
 
             all_keywords = traditional_keywords_llm + " " + llm_keywords + " " + figures_llm
             unique_keywords = ", ".join(set(all_keywords.split()))
-            
+            final_keywords = self.keywords_expander.infer(unique_keywords)[0]
+
+            if isinstance(final_keywords, list):
+                final_keywords = " ".join(final_keywords)
+
             return {
                 "summaries": self.summarizer.infer(papers_digest),
-                "keywords": unique_keywords
+                "keywords": final_keywords
             }
             
         except Exception as e:
