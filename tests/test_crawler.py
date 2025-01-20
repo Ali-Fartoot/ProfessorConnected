@@ -36,34 +36,43 @@ def mock_arxiv():
             "convert": mock_convert
         }
 
-def test_successful_crawl(tmp_path, mock_arxiv):
+def test_successful_crawl(mock_arxiv):
     # Arrange
     test_name = "Nathan Lambert"
-    expected_dir = tmp_path / "data" / test_name
+    # Use project root directory instead of tmp_path
+    expected_dir = os.path.join(os.getcwd(), "data", test_name)
     
-    # Act
-    crawl(test_name, number_of_articles=1)
-    
-    # Assert
-    # Check if directory was created
-    assert expected_dir.exists()
-    assert expected_dir.is_dir()
-    
-    # Check if PDF file exists in the directory
-    pdf_files = list(expected_dir.glob("*.pdf"))
-    assert len(pdf_files) == 1
+    try:
+        # Act
+        crawl(test_name, number_of_articles=1)
+        
+        # Assert
+        # Check if directory was created
+        assert os.path.exists(expected_dir)
+        assert os.path.isdir(expected_dir)
+        
+        # Check if PDF file exists in the directory
+        pdf_files = [f for f in os.listdir(expected_dir) if f.endswith('.pdf')]
+        assert len(pdf_files) == 1
 
-    # Verify mock calls
-    mock_arxiv['convert'].assert_called_once_with(test_name)
-    mock_arxiv['query'].assert_called_once_with(
-        search_query="test_query",
-        wait_time=3.0,
-        sort_by='lastUpdatedDate'
-    )
-    mock_arxiv['download'].assert_called_once_with(
-        mock_arxiv['query'].return_value[:1],
-        path=str(expected_dir)
-    )
+        # Verify mock calls
+        mock_arxiv['convert'].assert_called_once_with(test_name)
+        mock_arxiv['query'].assert_called_once_with(
+            search_query="Nathan Lambert",  # Updated to match mock_convert return value
+            wait_time=3.0,
+            sort_by='lastUpdatedDate'
+        )
+        mock_arxiv['download'].assert_called_once_with(
+            mock_arxiv['query'].return_value[:1],
+            path=str(expected_dir)
+        )
+    
+    finally:
+        # Cleanup: Remove the created directory after test
+        if os.path.exists(expected_dir):
+            for file in os.listdir(expected_dir):
+                os.remove(os.path.join(expected_dir, file))
+            os.rmdir(expected_dir)
 
 def test_no_articles_found(mock_arxiv):
     # Arrange
