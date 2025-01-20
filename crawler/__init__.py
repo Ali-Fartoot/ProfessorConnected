@@ -5,10 +5,15 @@ import os
 def crawl(name: str, number_of_articles: int = 10) -> None:
     search_query = convert_to_arxiv_query(name)
     articles = arxivpy.query(search_query=search_query,wait_time=3.0, sort_by='lastUpdatedDate')[:number_of_articles]
+    if not articles:
+        raise ValueError("No articles to download")
     arxivpy.download(articles, path=f'data/{name}')
     
     for article in articles:
         # Get the article's ID and title
+        if not article:
+            continue
+
         article_id = article["id"]
         article_title = article["title"]
         
