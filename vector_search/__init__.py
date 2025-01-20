@@ -254,21 +254,17 @@ class ProfessorResearchProfile:
                 
                 results[similar_prof_name] = {
                     'name': similar_prof_name,
-                    'department': metadata['department'],
-                    'university': metadata['university'],
                     'embedding_similarity': similarity_score,
                     'keyword_similarity': keyword_score,
-                    'combined_score': (similarity_score + keyword_score) / 2,  # Simple average
+                    'combined_score': (similarity_score + keyword_score) / 2,
                     'paper_count': metadata['paper_count'],
                     'shared_top_keywords': list(shared_top_keywords),
                     'top_keywords': json.loads(metadata['top_keywords'])[:5],
-                    'papers': json.loads(metadata['papers'])  # Include full paper details
+                    'papers': json.loads(metadata['papers'])
                 }
             
-            # Sort results by combined score
             final_results = list(results.values())
             final_results.sort(key=lambda x: x['combined_score'], reverse=True)
-            
             return final_results[:limit]
             
         except Exception as e:

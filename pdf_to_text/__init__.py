@@ -77,26 +77,26 @@ class AuthorDocumentProcessor:
         try:
             # Extract keywords from sections
             papers_digest = " ".join(sections)
-            figures_digest = ", ".join(figure) 
+            figures_digest = " ".join(figure) 
             traditional_keywords = [i[0] for i in self.key_extractor.extract_keywords(papers_digest)]
             llm_keywords = self.keywords_expander.infer(papers_digest)[0]
             figures_llm = self.keywords_expander.infer(figures_digest)[0]
             traditional_keywords_llm = self.keywords_expander.infer(traditional_keywords)[0]
 
             if isinstance(traditional_keywords_llm, list):
-                traditional_keywords_llm = " ".join(traditional_keywords_llm)
+                traditional_keywords_llm = ", ".join(traditional_keywords_llm)
 
             if isinstance(llm_keywords, list):
-                llm_keywords = " ".join(llm_keywords)
+                llm_keywords = ", ".join(llm_keywords)
 
             if isinstance(figures_llm, list):
-                figures_llm = " ".join(figures_llm)
+                figures_llm = ", ".join(figures_llm)
 
-            all_keywords = traditional_keywords_llm + " " + llm_keywords + " " + figures_llm
+            all_keywords = traditional_keywords_llm + ", " + llm_keywords + ", " + figures_llm
             final_keywords = self.keywords_expander.infer(all_keywords)[0]
 
             if isinstance(final_keywords, list):
-                final_keywords = " ".join(final_keywords)
+                final_keywords = ", ".join(final_keywords)
 
             return {
                 "summaries": self.summarizer.infer(papers_digest),

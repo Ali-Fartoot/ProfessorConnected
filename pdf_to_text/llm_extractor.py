@@ -85,27 +85,32 @@ class KeyExtractorLLM(LLMAgent):
     def __init__(self, message=None):
         super().__init__(message)
         DEFAULT_PROMPT = """
-        The following is a list of documents. Please extract the top keywords, separated by a comma, that describe the topic of the texts.
-        Note Please remove specific name such as Person, Oragazonation, Country etc.
-        Note remove duplicated keyword.
-        Expand Keyword by combining the gien keywords. Note than you can even mention the topics.
-        Remove numbers.
+        Act as a keyword extraction expert. Follow these steps for analysis:
+        1. Carefully read the document below
+        2. Identify core themes and concepts
+        3. Remove ALL specific entities (names, brands, locations)
+        4. Combine related terms into broader concepts
+        5. Eliminate duplicates and numeric values
+        6. Order results by relevance (most significant first)
 
-        Document:
-        - Traditional diets in most cultures were primarily plant-based with a little meat on top, but with the rise of industrial style meat production and factory farming, meat has become a staple food.
+        Format requirements:
+        - Return ONLY comma-separated keywords
+        - Prioritize thematic keywords over verbatim terms
+        - Capitalize each keyword
+        - No explanations or sentences
 
-        Keywords: Traditional diets, Plant-based, Meat, Industrial style meat production, Factory farming, Staple food, Cultural dietary practices
+        Example 1:
+        Document: "Traditional diets were plant-based with occasional meat, but industrial meat production made it a staple."
+        Keywords: FOOD SYSTEMS, DIETARY TRENDS, AGRICULTURAL INDUSTRIALIZATION, MEAT CONSUMPTION, CULTURAL GASTRONOMY
 
-        Document:
-        - The website mentions that it only takes a couple of days to deliver but I still have not received mine.
+        Example 2:
+        Document: "Website promised 2-day delivery but my order is late."
+        Keywords: E-COMMERCE OPERATIONS, DELIVERY MANAGEMENT, CUSTOMER EXPECTATIONS, SERVICE DISCREPANCIES, ORDER FULFILLMENT
 
-        Keywords: Website, Delivery, Mention, Timeframe, Not received, Waiting, Order fulfillment
-
-        Document:
+        Now process this document:
         - [DOCUMENT]
 
         Keywords:"""
-
         self.key_extractor = KeyLLM(keybert_openai(self.client,
                                                    prompt=DEFAULT_PROMPT,
                                                 )
