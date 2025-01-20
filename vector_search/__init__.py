@@ -226,8 +226,8 @@ class ProfessorResearchProfile:
                     text_query: str,
                     keywords: List[str] = None,
                     limit: int = 5,
-                    weight_embedding: float = 0.6,
-                    min_similarity: float = 0.3) -> List[Dict[str, Any]]:
+                    weight_embedding: float = 0.8,
+                    min_similarity: float = 0.1) -> List[Dict[str, Any]]:
         """
         Perform hybrid search combining embedding similarity and exact keyword matching
         
