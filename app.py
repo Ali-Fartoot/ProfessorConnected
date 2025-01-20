@@ -12,7 +12,7 @@ import io
 app = FastAPI(title="Professor Research Profile API")
 
 class ProfessorRequest(BaseModel):
-    name: str
+    professor_name: str
     number_of_articles: int = 3
 
 class SearchRequest(BaseModel):
@@ -27,7 +27,7 @@ async def add_new_professor(request: ProfessorRequest):
     Add a new professor to the database by crawling and processing their papers
     """
     try:
-        name = request.name
+        name = request.professor_name
         data_path = os.path.join("data", name)
         json_path = os.path.join(data_path, f"{name}.json")
 
