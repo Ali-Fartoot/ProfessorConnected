@@ -46,6 +46,5 @@ image = visualizer.save_figures(
     output_dir="data/Sergey Levine",  
     format="png",
     limit=5, 
-    weight_embedding=0.8,
-    threshold=0.1
+    min_similarity=0.1
 )

@@ -16,11 +16,10 @@ class ProfessorRequest(BaseModel):
     number_of_articles: int = 3
 
 class SearchRequest(BaseModel):
-    text_query: str
+    professor_name: str
     keywords: Optional[List[str]] = None
     limit: int = 5
-    weight_embedding: float = 0.6
-    threshold: float = 0.3
+    min_similarity: float =0.1
 
 @app.post("/add_professor")
 async def add_new_professor(request: ProfessorRequest):
@@ -103,7 +102,6 @@ async def search_professors(request: SearchRequest):
             min_similarity=request.min_similarity
 
         )
-        
         return {
             "results": results
         }
