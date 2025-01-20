@@ -81,7 +81,7 @@ class AuthorDocumentProcessor:
             traditional_keywords = [i[0] for i in self.key_extractor.extract_keywords(papers_digest)]
             llm_keywords = self.keywords_expander.infer(papers_digest)
             figures_llm = self.keywords_expander.infer(figures_digest)
-            print("figures_llm, llm_keywords, traditional_keywords: ", type(figures_llm), type(llm_keywords), type(traditional_keywords))
+            print("figures_llm, llm_keywords, traditional_keywords: ", figures_llm, llm_keywords, traditional_keywords)
 
             if isinstance(traditional_keywords, list):
                 traditional_keywords = " ".join(traditional_keywords)
