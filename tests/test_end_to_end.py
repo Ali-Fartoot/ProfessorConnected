@@ -3,7 +3,7 @@ from fastapi.testclient import TestClient
 from unittest.mock import patch, MagicMock, call
 import os
 import base64
-import app
+from app import app 
 
 client = TestClient(app)
 
