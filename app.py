@@ -9,8 +9,8 @@ start = time.time()
 professor = ["Manuel Cebrian","Mohammad Noorchenarboo","Yongfan Lai",
              "Kai Li", "Tian Lan", "Hani S. Mahmassani", "Sven Klaassen",
              "Kenichi Shimizu", " Andrey Ramos", "Wei Zhao", "Matt Schwartz",
-             "Nobutaka Ono", "Bodong Shang", "Meng-Xing Tang", "Geoffrey Ye Li","Ilya Sutskever"
-             "Andrew Ng", "Mohammad Abu Tami", "Li Weigang", "David Silver", "Pieter Abbeel", "Sergey Levine"]
+             "Nobutaka Ono", "Bodong Shang", "Ilya Sutskever"
+             "Andrew Ng", "Li Weigang", "David Silver", "Pieter Abbeel", "Sergey Levine"]
 
 # Process all professors
 for name in professor:
