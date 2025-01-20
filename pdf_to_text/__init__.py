@@ -91,13 +91,12 @@ class AuthorDocumentProcessor:
             if isinstance(fugures_llm, list):
                 fugures_llm = " ".join(fugures_llm)
 
-            all_keywords  = fugures_llm + llm_keywords + traditional_keywords
-            unique_keywords = ", ".join(set(all_keywords))
+            all_keywords = traditional_keywords + " " + llm_keywords + " " + fugures_llm
+            unique_keywords = ", ".join(set(all_keywords.split()))
 
-            
             return {
                 "summaries": self.summarizer.infer(papers_digest),
-                "keywords":unique_keywords
+                "keywords": unique_keywords
             }
             
         except Exception as e:
