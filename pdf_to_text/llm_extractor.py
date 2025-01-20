@@ -13,7 +13,7 @@ class LLMAgent(ABC):
 
     @abstractmethod
     def infer(self, 
-              temperature: float = 0.9,
+              temperature: float = 0.4,
               max_token: int = 14000,
               n: int = 1,
               stop: str = None) -> any:

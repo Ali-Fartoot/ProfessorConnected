@@ -68,10 +68,10 @@ class ProfessorResearchProfile:
             raise
 
     def add_professor(self, 
-                     name: str,
-                     papers: List[Dict[str, str]],
-                     department: str = None,
-                     university: str = None):
+                    name: str,
+                    papers: List[Dict[str, str]],
+                    department: str = None,
+                    university: str = None):
         """
         Add a professor and their research papers to the database
         """
@@ -80,7 +80,9 @@ class ProfessorResearchProfile:
         all_titles = []
         for paper in papers:
             all_titles.append(paper["title"])
-            all_keywords.extend([k.strip() for k in paper['keywords'].split(',')])
+            # Extract and clean keywords
+            paper_keywords = [k.strip().lower() for k in paper['keywords'].split(',')]
+            all_keywords.extend(paper_keywords)
             all_summaries.append(paper['summary'])
 
         keyword_freq = Counter(all_keywords)
@@ -89,11 +91,14 @@ class ProfessorResearchProfile:
 
         combined_text = f"{' '.join(top_keywords)} {' '.join(all_summaries)} {titles}"
         embedding = self.model.encode(combined_text).tolist()
+        
+        # Store keywords as a separate field in metadata for exact matching
         metadata = {
             'name': name,
             'department': department if department else "",
             'university': university if university else "",
             'top_keywords': json.dumps(top_keywords),
+            'keywords': json.dumps(list(set(all_keywords))),  # Store all unique keywords
             'keyword_frequencies': json.dumps(dict(keyword_freq)),
             'paper_count': len(papers),
             'papers': json.dumps(papers)
@@ -105,7 +110,6 @@ class ProfessorResearchProfile:
         )
         
         if existing_entries['ids']:
-            # Update existing entry
             self.collection.update(
                 ids=existing_entries['ids'][0],
                 embeddings=[embedding],
@@ -114,7 +118,6 @@ class ProfessorResearchProfile:
             )
             print(f"Updated existing profile for professor {name}")
         else:
-            # Add new entry
             self.collection.add(
                 documents=[combined_text],
                 embeddings=[embedding],
@@ -122,6 +125,38 @@ class ProfessorResearchProfile:
                 ids=[str(uuid.uuid4())]
             )
             print(f"Added new profile for professor {name}")
+
+    def exact_keyword_search(self, keywords: List[str], limit: int = 5) -> List[Dict[str, Any]]:
+        """
+        Perform exact keyword search
+        """
+        # Convert search keywords to lowercase for case-insensitive matching
+        search_keywords = [k.lower() for k in keywords]
+        
+        # Get all entries
+        results = self.collection.get()
+        
+        matching_professors = []
+        
+        for i, metadata in enumerate(results['metadatas']):
+            prof_keywords = set(json.loads(metadata['keywords']))
+            # Check if any of the search keywords match exactly
+            matching_keywords = [k for k in search_keywords if k in prof_keywords]
+            
+            if matching_keywords:  # If there are any matching keywords
+                matching_professors.append({
+                    'name': metadata['name'],
+                    'department': metadata['department'],
+                    'university': metadata['university'],
+                    'matching_keywords': matching_keywords,
+                    'paper_count': metadata['paper_count'],
+                    'top_keywords': json.loads(metadata['top_keywords'])[:5]
+                })
+        
+        # Sort by number of matching keywords (most matches first)
+        matching_professors.sort(key=lambda x: len(x['matching_keywords']), reverse=True)
+        
+        return matching_professors[:limit]
 
     def find_similar_professors(self,
                               professor_name: str,
@@ -186,7 +221,105 @@ class ProfessorResearchProfile:
             'paper_count': metadata['paper_count'],
             'top_keywords': json.loads(metadata['top_keywords'])
         }
+    
+    def hybrid_search(self, 
+                    text_query: str,
+                    keywords: List[str] = None,
+                    limit: int = 5,
+                    weight_embedding: float = 0.6,
+                    min_similarity: float = 0.3) -> List[Dict[str, Any]]:
+        """
+        Perform hybrid search combining embedding similarity and exact keyword matching
+        
+        Args:
+            text_query (str): Text to use for semantic search
+            keywords (List[str]): List of exact keywords to match
+            limit (int): Maximum number of results to return
+            weight_embedding (float): Weight for embedding similarity (0-1)
+            min_similarity (float): Minimum similarity threshold
+        
+        Returns:
+            List[Dict[str, Any]]: Combined and ranked search results
+        """
+        results = {}
+        
+        # 1. Get embedding-based results
+        query_embedding = self.model.encode(text_query).tolist()
+        embedding_results = self.collection.query(
+            query_embeddings=[query_embedding],
+            n_results=limit * 2  # Get more results initially for better hybrid ranking
+        )
+        
+        # Process embedding results
+        for i in range(len(embedding_results['ids'][0])):
+            metadata = embedding_results['metadatas'][0][i]
+            similarity_score = 1 - embedding_results['distances'][0][i]
+            
+            if similarity_score < min_similarity:
+                continue
+                
+            prof_name = metadata['name']
+            results[prof_name] = {
+                'name': prof_name,
+                'department': metadata['department'],
+                'university': metadata['university'],
+                'embedding_score': similarity_score,
+                'keyword_score': 0.0,
+                'paper_count': metadata['paper_count'],
+                'top_keywords': json.loads(metadata['top_keywords'])[:5],
+                'matching_keywords': []
+            }
 
+        # 2. Get keyword-based results if keywords provided
+        if keywords:
+            search_keywords = [k.lower() for k in keywords]
+            all_entries = self.collection.get()
+            
+            for i, metadata in enumerate(all_entries['metadatas']):
+                prof_name = metadata['name']
+                prof_keywords = set(json.loads(metadata['keywords']))
+                matching_keywords = [k for k in search_keywords if k in prof_keywords]
+                
+                keyword_score = len(matching_keywords) / len(search_keywords) if search_keywords else 0
+                
+                if prof_name in results:
+                    # Update existing entry
+                    results[prof_name]['keyword_score'] = keyword_score
+                    results[prof_name]['matching_keywords'] = matching_keywords
+                elif keyword_score > 0:
+                    # Add new entry from keyword search
+                    results[prof_name] = {
+                        'name': prof_name,
+                        'department': metadata['department'],
+                        'university': metadata['university'],
+                        'embedding_score': 0.0,
+                        'keyword_score': keyword_score,
+                        'paper_count': metadata['paper_count'],
+                        'top_keywords': json.loads(metadata['top_keywords'])[:5],
+                        'matching_keywords': matching_keywords
+                    }
+
+        # 3. Calculate combined scores and rank results
+        final_results = []
+        for prof_data in results.values():
+            # Calculate weighted combined score
+            if keywords:
+                # If keywords provided, use weighted combination
+                combined_score = (
+                    weight_embedding * prof_data['embedding_score'] +
+                    (1 - weight_embedding) * prof_data['keyword_score']
+                )
+            else:
+                # If no keywords, use only embedding score
+                combined_score = prof_data['embedding_score']
+                
+            prof_data['combined_score'] = combined_score
+            final_results.append(prof_data)
+
+        # Sort by combined score and return top results
+        final_results.sort(key=lambda x: x['combined_score'], reverse=True)
+        
+        return final_results[:limit]
 
 def add_professor(name: str):
     try:
@@ -215,10 +348,31 @@ def find_similar_professor(limit: int = 5):
         print("Error finding similar professors: ", e)
         raise
 
+def find_similar_by_keywords_professor(keywords: list, limit: int = 5 ):
+    with ProfessorResearchProfile(path="./professor_db") as profile_system:
+        similar_profs = profile_system.exact_keyword_search(
+            keywords=keywords,
+            limit=limit
+        )
+        return similar_profs
+        
 def cleanup_database(name: str = "professor_profiles"):
     try:
         with ProfessorResearchProfile(path="./professor_db") as profile_system:  
             profile_system.cleanup(name)
     except Exception as e:
         print(f"Error during database cleanup: {e}")
+        raise
+
+def find_hybrid_search_professors(text_query: str, keywords: List[str] = None, limit: int = 5):
+    try:
+        with ProfessorResearchProfile(path="./professor_db") as profile_system:
+            results = profile_system.hybrid_search(
+                text_query=text_query,
+                keywords=keywords,
+                limit=limit
+            )
+            return results
+    except Exception as e:
+        print("Error in hybrid search:", e)
         raise

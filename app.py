@@ -2,15 +2,14 @@ from crawler import crawl
 from pdf_to_text import AuthorDocumentProcessor
 import os
 import time
-from vector_search import cleanup_database, add_professor, find_similar_professor
+from vector_search import cleanup_database, add_professor,  find_hybrid_search_professors
 from vector_search.visulizer import ProfessorVisualizer
 start = time.time()
 
 professor = ["Manuel Cebrian","Mohammad Noorchenarboo","Yongfan Lai",
              "Kai Li", "Tian Lan", "Hani S. Mahmassani", "Sven Klaassen",
              "Kenichi Shimizu", " Andrey Ramos", "Wei Zhao", "Matt Schwartz",
-             "Nobutaka Ono", "Bodong Shang",
-             "F. Javier López-Martínez", "Meng-Xing Tang", "Geoffrey Ye Li","Ilya Sutskever"
+             "Nobutaka Ono", "Bodong Shang", "Meng-Xing Tang", "Geoffrey Ye Li","Ilya Sutskever"
              "Andrew Ng", "Mohammad Abu Tami", "Li Weigang", "David Silver", "Pieter Abbeel", "Sergey Levine"]
 
 # Process all professors

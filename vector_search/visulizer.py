@@ -18,51 +18,44 @@ class ProfessorVisualizer:
         self.path = path
         self.colors = px.colors.qualitative.Set3
 
-    def create_network_graph(self, professor_name: str, limit: int = 5, min_similarity: float = 0.3):
+    def create_network_graph(self, professor_name: str, limit: int = 5):
         """
-        Create an interactive network graph showing all professors but connecting only
-        the input professor with their most similar professors
+        Create an interactive network graph showing only the query professor
+        and their most similar professors
         """
         with ProfessorResearchProfile(path=self.path) as profile_system:
-            # Get similar professors
-            similar_profs = profile_system.find_similar_professors(
-                professor_name=professor_name,
-                limit=limit,
-                min_similarity=min_similarity
+            # Get similar professors using hybrid search
+            similar_profs = profile_system.hybrid_search(
+                text_query=professor_name,  # Using professor name as query
+                limit=limit
             )
-            central_prof_data = profile_system.get_professor_stats(professor_name)
             
-            # Get all professors from the collection
-            all_professors = profile_system.collection.get()
+            # Get central professor's data
+            central_prof_data = profile_system.get_professor_stats(professor_name)
 
         G = nx.Graph()
 
-        # Add all professors as nodes
-        for i, prof_metadata in enumerate(all_professors['metadatas']):
-            prof_name = prof_metadata['name']
-            # Make the node bigger and different color if it's the input professor
-            if prof_name == professor_name:
-                G.add_node(prof_name,
-                        size=20,
-                        color=self.colors[0],
-                        keywords=json.loads(prof_metadata['top_keywords']))
-            else:
-                G.add_node(prof_name,
-                        size=10,  # smaller size for other professors
-                        color=self.colors[-1],  # different color for other professors
-                        keywords=json.loads(prof_metadata['top_keywords']))
+        # Add central professor node
+        G.add_node(professor_name,
+                  size=30,
+                  color=self.colors[0],
+                  keywords=central_prof_data['top_keywords'])
 
-        # Add edges only for similar professors
+        # Add similar professors as nodes and create edges
         for i, prof in enumerate(similar_profs):
-            G.add_edge(professor_name, 
-                    prof['name'],
-                    weight=prof['similarity_score'])
-            # Make connected professors' nodes slightly bigger and different color
-            G.nodes[prof['name']]['size'] = 15
-            G.nodes[prof['name']]['color'] = self.colors[i + 1]
+            if prof['name'] != professor_name:  # Avoid self-connection
+                G.add_node(prof['name'],
+                          size=20,
+                          color=self.colors[i + 1],
+                          keywords=prof['top_keywords'],
+                          matching_keywords=prof['matching_keywords'])
+                
+                G.add_edge(professor_name, 
+                          prof['name'],
+                          weight=prof['combined_score'])
 
-        # Calculate layout - using larger spacing for better visualization
-        pos = nx.spring_layout(G, k=1.5)
+        # Calculate layout with more spacing
+        pos = nx.spring_layout(G, k=2, iterations=50)
 
         # Create edges trace
         edge_x = []
@@ -74,12 +67,12 @@ class ProfessorVisualizer:
             x1, y1 = pos[edge[1]]
             edge_x.extend([x0, x1, None])
             edge_y.extend([y0, y1, None])
-            similarity = G.edges[edge]['weight']
-            edge_text.append(f"Similarity: {similarity:.2f}")
+            score = G.edges[edge]['weight']
+            edge_text.append(f"Similarity Score: {score:.3f}")
 
         edges_trace = go.Scatter(
             x=edge_x, y=edge_y,
-            line=dict(width=1, color='#888'),
+            line=dict(width=2, color='#888'),
             hoverinfo='text',
             text=edge_text,
             mode='lines')
@@ -95,10 +88,21 @@ class ProfessorVisualizer:
             x, y = pos[node]
             node_x.append(x)
             node_y.append(y)
-            node_text.append(
-                f"Professor: {node}<br>"
-                f"Top Keywords: {', '.join(G.nodes[node]['keywords'])}"
-            )
+            
+            if node == professor_name:
+                node_text.append(
+                    f"Professor: {node}<br>"
+                    f"Top Keywords: {', '.join(G.nodes[node]['keywords'])}"
+                )
+            else:
+                matching_keywords = G.nodes[node].get('matching_keywords', [])
+                node_text.append(
+                    f"Professor: {node}<br>"
+                    f"Top Keywords: {', '.join(G.nodes[node]['keywords'])}<br>"
+                    f"Matching Keywords: {', '.join(matching_keywords)}<br>"
+                    f"Similarity Score: {G.edges[(professor_name, node)]['weight']:.3f}"
+                )
+            
             node_colors.append(G.nodes[node]['color'])
             node_sizes.append(G.nodes[node]['size'])
 
@@ -114,15 +118,18 @@ class ProfessorVisualizer:
                 color=node_colors,
                 line_width=2))
 
+        # Create the figure with a larger size
         fig = go.Figure(data=[edges_trace, nodes_trace],
-                    layout=go.Layout(
-                        title=f'Research Similarity Network for {professor_name}',
-                        showlegend=False,
-                        hovermode='closest',
-                        margin=dict(b=20,l=5,r=5,t=40),
-                        xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
-                        yaxis=dict(showgrid=False, zeroline=False, showticklabels=False))
-                    )
+                       layout=go.Layout(
+                           title=f'Research Similarity Network for {professor_name}',
+                           showlegend=False,
+                           hovermode='closest',
+                           margin=dict(b=20,l=5,r=5,t=40),
+                           xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+                           yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+                           width=1000,
+                           height=800
+                       ))
 
         return fig
 
@@ -131,32 +138,37 @@ class ProfessorVisualizer:
         Create a heatmap showing similarities between professors
         """
         with ProfessorResearchProfile(path=self.path) as profile_system:
-            similar_profs = profile_system.find_similar_professors(
-                professor_name=professor_name,
+            similar_profs = profile_system.hybrid_search(
+                text_query=professor_name,
                 limit=limit
             )
 
+        # Filter out the query professor from results if present
+        similar_profs = [prof for prof in similar_profs if prof['name'] != professor_name]
         names = [professor_name] + [prof['name'] for prof in similar_profs]
         matrix_size = len(names)
         similarity_matrix = np.zeros((matrix_size, matrix_size))
         
+        # Fill in the similarity scores
         for i, prof in enumerate(similar_profs):
-            similarity_matrix[0, i+1] = prof['similarity_score']
-            similarity_matrix[i+1, 0] = prof['similarity_score']
+            similarity_matrix[0, i+1] = prof['combined_score']
+            similarity_matrix[i+1, 0] = prof['combined_score']
 
         fig = go.Figure(data=go.Heatmap(
             z=similarity_matrix,
             x=names,
             y=names,
             colorscale='Viridis',
-            text=np.round(similarity_matrix, 2),
+            text=np.round(similarity_matrix, 3),
             texttemplate='%{text}',
             textfont={'size': 10}))
 
         fig.update_layout(
             title=f'Research Similarity Heatmap for {professor_name}',
             xaxis_title='Professors',
-            yaxis_title='Professors'
+            yaxis_title='Professors',
+            width=800,
+            height=800
         )
 
         return fig
@@ -166,7 +178,8 @@ class ProfessorVisualizer:
         """
         Generate and save all visualization figures
         """
-        os.makedirs(output_dir, exist_ok=True)        
+        os.makedirs(output_dir, exist_ok=True)
+        
         network_fig = self.create_network_graph(professor_name, limit=limit)
         network_path = os.path.join(output_dir, 
                                   f"network_{professor_name}.{format}")
@@ -179,14 +192,4 @@ class ProfessorVisualizer:
         heatmap_fig.write_image(heatmap_path)
         print(f"Heatmap saved to: {heatmap_path}")
         
-        return heatmap_fig
-
-# Usage Example
-if __name__ == "__main__":
-    visualizer = ProfessorVisualizer()
-    visualizer.save_figures(
-        professor_name="Majid Nili Ahmadabadi",
-        output_dir="./figures",
-        format="png",
-        limit=5
-    )
+        return network_fig, heatmap_fig

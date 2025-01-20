@@ -93,8 +93,7 @@ class AuthorDocumentProcessor:
                 figures_llm = " ".join(figures_llm)
 
             all_keywords = traditional_keywords_llm + " " + llm_keywords + " " + figures_llm
-            unique_keywords = ", ".join(set(all_keywords.split()))
-            final_keywords = self.keywords_expander.infer(unique_keywords)[0]
+            final_keywords = self.keywords_expander.infer(all_keywords)[0]
 
             if isinstance(final_keywords, list):
                 final_keywords = " ".join(final_keywords)
