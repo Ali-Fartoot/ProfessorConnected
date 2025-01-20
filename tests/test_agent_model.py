@@ -34,7 +34,7 @@ class TestSummarizerAgent:
         assert kwargs['model'] == 'local-model'
         assert test_text in kwargs['messages'][1]['content']
         assert kwargs['temperature'] == 0.5
-        assert kwargs['max_tokens'] == 14000
+        assert kwargs['max_tokens'] == 100
         
         # Verify result
         assert type(result) == str
