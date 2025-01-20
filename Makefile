@@ -1,7 +1,7 @@
 PYTHON = python3
 USE_GPU ?= false
 
-.PHONY: install run test cold-start request
+.PHONY: install run test cold-start image-request
 
 install:
 	. ./venv/bin/activate &&  pip install -r requirements.txt
@@ -23,8 +23,8 @@ test:
 cold-start:
 	. ./venv/bin/activate && $(PYTHON) cold_start.py
 
-request:
-	./run.sh
+image-request:
+	. ./venv/bin/activate && $(PYTHON) image_request.py
 
 clean:
 	@echo "Cleaning data folders"
