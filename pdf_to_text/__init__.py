@@ -88,11 +88,11 @@ class AuthorDocumentProcessor:
             if isinstance(llm_keywords, list):
                 llm_keywords = " ".join(llm_keywords)
 
-            if isinstance(llm_keywords, list):
-                figures_digest = " ".join(figures_digest)
+            if isinstance(fugures_llm, list):
+                fugures_llm = " ".join(fugures_llm)
 
-            all_keywords  = figures_digest + llm_keywords + traditional_keywords
-            unique_keywords = ", ".join(set(all_keywords ))
+            all_keywords  = fugures_llm + llm_keywords + traditional_keywords
+            unique_keywords = ", ".join(set(all_keywords))
 
             
             return {
