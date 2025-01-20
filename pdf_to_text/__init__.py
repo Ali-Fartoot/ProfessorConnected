@@ -81,24 +81,23 @@ class AuthorDocumentProcessor:
             traditional_keywords = [i[0] for i in self.key_extractor.extract_keywords(papers_digest)]
             llm_keywords = self.keywords_expander.infer(papers_digest)[0]
             figures_llm = self.keywords_expander.infer(figures_digest)[0]
+            traditional_keywords_llm = self.keywords_expander.infer(traditional_keywords)[0]
 
-            if isinstance(traditional_keywords, list):
-                traditional_keywords = " ".join(traditional_keywords)
+            if isinstance(traditional_keywords_llm, list):
+                traditional_keywords_llm = " ".join(traditional_keywords_llm)
 
-            
             if isinstance(llm_keywords, list):
                 llm_keywords = " ".join(llm_keywords)
 
             if isinstance(figures_llm, list):
                 figures_llm = " ".join(figures_llm)
 
-
-            all_keywords = traditional_keywords + " " + llm_keywords + " " + figures_llm
+            all_keywords = traditional_keywords_llm + " " + llm_keywords + " " + figures_llm
             unique_keywords = ", ".join(set(all_keywords.split()))
-            final_keywords = self.keywords_expander.infer(unique_keywords)[0]
+            
             return {
                 "summaries": self.summarizer.infer(papers_digest),
-                "keywords": final_keywords
+                "keywords": unique_keywords
             }
             
         except Exception as e:
