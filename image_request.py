@@ -8,7 +8,7 @@ import json
 # Make the request
 response = requests.post(
     "http://localhost:8000/search_with_visualization",
-    json={"text_query": "Sergey Levine", "limit": 5, "min_similarity": 0.1}
+    json={"professor_name": "Sergey Levine", "limit": 5, "min_similarity": 0.1}
 )
 
 # Print the response for debugging
