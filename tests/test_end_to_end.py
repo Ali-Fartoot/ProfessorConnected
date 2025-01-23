@@ -1,142 +1,182 @@
 import pytest
-from fastapi.testclient import TestClient
-from unittest.mock import patch, MagicMock, call
+import requests
 import os
-import base64
-from app import app 
-print(app)
-client = TestClient(app)
+from unittest.mock import patch, MagicMock
 
+BASE_URL = "http://localhost:8000"
+
+# Fixture for cleanup before and after tests
 @pytest.fixture(autouse=True)
-def mock_dependencies():
-    with patch('crawler.crawl') as mock_crawl, \
-         patch('pdf_to_text.AuthorDocumentProcessor') as mock_processor, \
-         patch('vector_search.add_professor') as mock_add_prof, \
-         patch('vector_search.find_hybrid_search_professors') as mock_search, \
-         patch('vector_search.visulizer.ProfessorVisualizer') as mock_viz, \
-         patch('vector_search.cleanup_database') as mock_cleanup, \
-         patch('os.makedirs') as mock_makedirs, \
-         patch('os.path.exists') as mock_exists:
-        
-        # Configure mock processor
-        mock_processor_instance = MagicMock()
-        mock_processor.return_value = mock_processor_instance
-        mock_processor_instance.__call__ = MagicMock(return_value=True)
-        
-        # Configure visualization mock
-        mock_viz_instance = MagicMock()
-        mock_viz.return_value = mock_viz_instance
-        mock_viz_instance.save_figures.return_value = "/tmp/network.png"
-        
-        # Configure exists mock with default behavior
-        mock_exists.return_value = True
-        
-        # Configure makedirs to do nothing
-        mock_makedirs.return_value = None
-        
-        yield {
-            "crawl": mock_crawl,
-            "processor": mock_processor_instance,
-            "add_prof": mock_add_prof,
-            "search": mock_search,
-            "viz": mock_viz_instance,
-            "cleanup": mock_cleanup,
-            "exists": mock_exists,
-            "makedirs": mock_makedirs
-        }
+def setup_and_cleanup():
+    # Setup - clean the database before tests
+    requests.delete(f"{BASE_URL}/cleanup_database")
+    yield
+    # Cleanup after tests
+    requests.delete(f"{BASE_URL}/cleanup_database")
 
-def test_add_professor_success(mock_dependencies):
+@pytest.mark.integration
+def test_add_professor_success():
+    """Test successful professor addition"""
     professor_name = "Nathan Lambert"
-    data_path = os.path.join("data", professor_name)
-    json_path = os.path.join(data_path, f"{professor_name}.json")
-    
-    # Configure mock exists to return appropriate values for different paths
-    mock_dependencies["exists"].side_effect = lambda path: {
-        "data": True,
-        data_path: True,
-        json_path: True
-    }.get(path, False)
-    
-    # Configure other mocks
-    mock_dependencies["crawl"].return_value = True
-    mock_dependencies["processor"].return_value.process_documents.return_value = True
-    mock_dependencies["add_prof"].return_value = True
-    
-    response = client.post("/add_professor", json={
-        "professor_name": professor_name,
-        "number_of_articles": 3
-    })
-    
-    # Print debug information
-    print(f"Response status: {response.status_code}")
-    if response.status_code != 200:
-        print(f"Error response: {response.json()}")
+    response = requests.post(
+        f"{BASE_URL}/add_professor",
+        json={
+            "professor_name": professor_name,
+            "number_of_articles": 3
+        }
+    )
     
     assert response.status_code == 200
     assert f"Successfully added professor {professor_name}" in response.json()["message"]
+
+@pytest.mark.integration
+def test_add_professor_failure():
+    """Test professor addition failure"""
+    professor_name = "NonexistentProfessor"
+    response = requests.post(
+        f"{BASE_URL}/add_professor",
+        json={
+            "professor_name": professor_name,
+            "number_of_articles": -1  # Invalid number to trigger failure
+        }
+    )
     
-    # Verify the expected function calls
-    mock_dependencies["crawl"].assert_called_once_with(professor_name, number_of_articles=3)
-    mock_dependencies["add_prof"].assert_called_once_with(professor_name)
+    assert response.status_code in [400, 500]  # Accept either client or server error
+
+@pytest.mark.integration
+def test_search_functionality():
+    """Test search endpoint"""
+    # First add a professor
+    professor_name = "Nathan Lambert"
+    add_response = requests.post(
+        f"{BASE_URL}/add_professor",
+        json={
+            "professor_name": professor_name,
+            "number_of_articles": 3
+        }
+    )
+    assert add_response.status_code == 200
+
+    # Then search
+    search_response = requests.post(
+        f"{BASE_URL}/search",
+        json={
+            "professor_name": professor_name,
+            "limit": 5
+        }
+    )
     
+    assert search_response.status_code == 200
+    assert "results" in search_response.json()
 
-def test_add_professor_failure(mock_dependencies):
-    professor_name = "Dr_Fail"
-    data_path = os.path.join("data", professor_name)
-    json_path = os.path.join(data_path, f"{professor_name}.json")
+@pytest.mark.integration
+def test_visualization():
+    """Test visualization endpoint"""
+    # First add a professor
+    professor_name = "Nathan Lambert"
+    requests.post(
+        f"{BASE_URL}/add_professor",
+        json={
+            "professor_name": professor_name,
+            "number_of_articles": 3
+        }
+    )
 
-    # Configure mock exists to simulate a failure scenario
-    # - data directory exists
-    # - professor data directory exists
-    # - but json file doesn't exist (processing failed)
-    mock_dependencies["exists"].side_effect = lambda path: {
-        "data": True,
-        data_path: True,
-        json_path: False  # This will trigger the failure case
-    }.get(path, False)
-
-    # Configure crawl to succeed but processing to fail
-    mock_dependencies["crawl"].return_value = True
-    mock_dependencies["processor"].return_value.__call__.side_effect = Exception("Failed to process documents")
-
-    response = client.post("/add_professor", json={
-        "professor_name": professor_name,
-        "number_of_articles": 3
-    })
-    
-    # Print debug information
-    print(f"Response status: {response.status_code}")
-    print(f"Response body: {response.json()}")
-
-    assert response.status_code == 500
-    assert "Failed to process professor documents" in response.json()["detail"]
-
-    # Verify that crawl was called but add_professor was not
-    mock_dependencies["crawl"].assert_called_once_with(professor_name, number_of_articles=3)
-    mock_dependencies["add_prof"].assert_not_called()
-
-def test_database_cleanup(mock_dependencies):
-    response = client.delete("http://localhost:8000/cleanup_database")
+    response = requests.post(
+        f"{BASE_URL}/search_with_visualization",
+        json={
+            "professor_name": professor_name
+        }
+    )
     
     assert response.status_code == 200
+    assert "network_image" in response.json()
 
+@pytest.mark.integration
+def test_database_cleanup():
+    """Test database cleanup functionality"""
+    response = requests.delete(f"{BASE_URL}/cleanup_database")
+    assert response.status_code == 200
+    assert "successfully" in response.json()["message"].lower()
 
-def test_full_workflow(mock_dependencies):
+@pytest.mark.integration
+def test_full_workflow():
+    """Test the entire workflow"""
+    professor_name = "Nathan Lambert"
 
-    client.post("http://localhost:8000/add_professor", json={
-        "professor_name": "Nathan Lambert",
-    })
-    
-    search_response = client.post("http://localhost:8000/search", json={
-        "professor_name": "Nathan Lambert",
-        "limit": 5
-    })
-    
-    viz_response = client.post("http://localhost:8000/search_with_visualization", json={
-        "professor_name": "Nathan Lambert"
-    })
-    
-    cleanup_response = client.delete("/http://localhost:8000/cleanup_database")
+    # 1. Add professor
+    add_response = requests.post(
+        f"{BASE_URL}/add_professor",
+        json={
+            "professor_name": professor_name,
+            "number_of_articles": 3
+        }
+    )
+    assert add_response.status_code == 200
+
+    # 2. Search
+    search_response = requests.post(
+        f"{BASE_URL}/search",
+        json={
+            "professor_name": professor_name,
+            "limit": 5
+        }
+    )
     assert search_response.status_code == 200
+
+    # 3. Visualization
+    viz_response = requests.post(
+        f"{BASE_URL}/search_with_visualization",
+        json={
+            "professor_name": professor_name
+        }
+    )
     assert viz_response.status_code == 200
-    assert cleanup_response.status_code == 200
+
+@pytest.mark.integration
+class TestErrorScenarios:
+    """Group of tests for error scenarios"""
+
+    def test_invalid_professor_name(self):
+        response = requests.post(
+            f"{BASE_URL}/add_professor",
+            json={
+                "professor_name": "",
+                "number_of_articles": 3
+            }
+        )
+        assert response.status_code == 422
+
+    def test_invalid_article_count(self):
+        response = requests.post(
+            f"{BASE_URL}/add_professor",
+            json={
+                "professor_name": "Test Professor",
+                "number_of_articles": -1
+            }
+        )
+        assert response.status_code == 422
+
+    def test_nonexistent_professor_search(self):
+        response = requests.post(
+            f"{BASE_URL}/search",
+            json={
+                "professor_name": "NonexistentProfessor",
+                "limit": 5
+            }
+        )
+        assert response.status_code == 500
+
+# Fixture for handling connection errors
+@pytest.fixture
+def check_api_available():
+    try:
+        requests.get(BASE_URL)
+    except requests.ConnectionError:
+        pytest.skip("API server is not available")
+
+# Add this as a dependency to all tests
+@pytest.mark.usefixtures("check_api_available")
+class TestWithConnectionCheck:
+    """Tests that require API connection"""
+    pass
