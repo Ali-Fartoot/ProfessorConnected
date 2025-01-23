@@ -4,7 +4,7 @@ from unittest.mock import patch, MagicMock, call
 import os
 import base64
 from app import app 
-
+print(app)
 client = TestClient(app)
 
 @pytest.fixture(autouse=True)
