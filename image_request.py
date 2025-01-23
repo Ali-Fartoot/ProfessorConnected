@@ -6,11 +6,15 @@ import io
 import json
 
 # Make the request
-response = requests.post(
-    "http://localhost:8000/search_with_visualization",
-    json={"professor_name": "Sergey Levine", "limit": 5, "min_similarity": 0.1}
-)
+# response = requests.post(
+#     "http://localhost:8000/search_with_visualization",
+#     json={"professor_name": "Sergey Levine", "limit": 5, "min_similarity": 0.1}
+# )
 
+response = requests.post("http://localhost:8000/add_professor", json={
+        "professor_name": "Nathan Lambert",
+        "number_of_articles": 3
+    })
 # Print the response for debugging
 print("Response Status Code:", response.status_code)
 print("Response Content:", response.text)
