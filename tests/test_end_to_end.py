@@ -36,7 +36,7 @@ def mock_dependencies():
         }
 
 def test_add_professor_success(mock_dependencies):
-    response = client.post("/add_professor", json={
+    response = client.post("http://localhost:8000/add_professor", json={
         "professor_name": "Nathan Lambert",
         "number_of_articles": 3
     })
@@ -50,7 +50,7 @@ def test_add_professor_success(mock_dependencies):
 
 def test_add_professor_failure(mock_dependencies):
     mock_dependencies["exists"].side_effect = lambda x: True if "data/Dr_Fail" in x else False
-    response = client.post("/add_professor", json={
+    response = client.post("http://localhost:8000/add_professor", json={
         "professor_name": "Dr_Fail",
         "number_of_articles": 3
     })
@@ -60,7 +60,7 @@ def test_add_professor_failure(mock_dependencies):
 
 
 def test_database_cleanup(mock_dependencies):
-    response = client.delete("/cleanup_database")
+    response = client.delete("http://localhost:8000/cleanup_database")
     
     assert response.status_code == 200
     assert "successfully cleaned up" in response.json()["message"].lower()
@@ -68,17 +68,17 @@ def test_database_cleanup(mock_dependencies):
 
 def test_full_workflow(mock_dependencies):
 
-    client.post("/add_professor", json={
+    client.post("http://localhost:8000/add_professor", json={
         "professor_name": "Nathan Lambert",
         "number_of_articles": 3
     })
     
-    search_response = client.post("/search", json={
+    search_response = client.post("http://localhost:8000/search", json={
         "professor_name": "Nathan Lambert",
         "limit": 5
     })
     
-    viz_response = client.post("/search_with_visualization", json={
+    viz_response = client.post("http://localhost:8000/search_with_visualization", json={
         "professor_name": "Nathan Lambert"
     })
     

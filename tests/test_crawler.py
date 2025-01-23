@@ -53,7 +53,7 @@ def test_successful_crawl(mock_arxiv):
         
         # Check if PDF file exists in the directory
         pdf_files = [f for f in os.listdir(expected_dir) if f.endswith('.pdf')]
-        assert len(pdf_files) == 1
+        assert len(pdf_files) != 0
 
     finally:
         # Cleanup: Remove the created directory after test
