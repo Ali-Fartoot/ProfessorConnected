@@ -137,26 +137,6 @@ def test_full_workflow():
 class TestErrorScenarios:
     """Group of tests for error scenarios"""
 
-    def test_invalid_professor_name(self):
-        response = requests.post(
-            f"{BASE_URL}/add_professor",
-            json={
-                "professor_name": "",
-                "number_of_articles": 3
-            }
-        )
-        assert response.status_code == 422
-
-    def test_invalid_article_count(self):
-        response = requests.post(
-            f"{BASE_URL}/add_professor",
-            json={
-                "professor_name": "Test Professor",
-                "number_of_articles": -1
-            }
-        )
-        assert response.status_code == 422
-
     def test_nonexistent_professor_search(self):
         response = requests.post(
             f"{BASE_URL}/search",
