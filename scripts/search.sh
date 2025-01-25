@@ -1,5 +1,4 @@
 #!/bin/bash
-
 # Search without visualization
 curl -X POST "http://localhost:8000/search" \
      -H "Content-Type: application/json" \

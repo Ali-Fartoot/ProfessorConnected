@@ -5,13 +5,10 @@ from unittest.mock import patch, MagicMock
 
 BASE_URL = "http://localhost:8000"
 
-# Fixture for cleanup before and after tests
 @pytest.fixture(autouse=True)
 def setup_and_cleanup():
-    # Setup - clean the database before tests
     requests.delete(f"{BASE_URL}/cleanup_database")
     yield
-    # Cleanup after tests
     requests.delete(f"{BASE_URL}/cleanup_database")
 
 @pytest.mark.integration
@@ -37,16 +34,14 @@ def test_add_professor_failure():
         f"{BASE_URL}/add_professor",
         json={
             "professor_name": professor_name,
-            "number_of_articles": -1  # Invalid number to trigger failure
+            "number_of_articles": -1  
         }
     )
     
-    assert response.status_code in [400, 500]  # Accept either client or server error
+    assert response.status_code in [400, 500]  
 
 @pytest.mark.integration
 def test_search_functionality():
-    """Test search endpoint"""
-    # First add a professor
     professor_name = "Nathan Lambert"
     add_response = requests.post(
         f"{BASE_URL}/add_professor",
@@ -56,8 +51,6 @@ def test_search_functionality():
         }
     )
     assert add_response.status_code == 200
-
-    # Then search
     search_response = requests.post(
         f"{BASE_URL}/search",
         json={
@@ -71,8 +64,6 @@ def test_search_functionality():
 
 @pytest.mark.integration
 def test_visualization():
-    """Test visualization endpoint"""
-    # First add a professor
     professor_name = "Nathan Lambert"
     requests.post(
         f"{BASE_URL}/add_professor",
@@ -88,23 +79,18 @@ def test_visualization():
             "professor_name": professor_name
         }
     )
-    
     assert response.status_code == 200
     assert "network_image" in response.json()
 
 @pytest.mark.integration
 def test_database_cleanup():
-    """Test database cleanup functionality"""
     response = requests.delete(f"{BASE_URL}/cleanup_database")
     assert response.status_code == 200
     assert "successfully" in response.json()["message"].lower()
 
 @pytest.mark.integration
 def test_full_workflow():
-    """Test the entire workflow"""
     professor_name = "Nathan Lambert"
-
-    # 1. Add professor
     add_response = requests.post(
         f"{BASE_URL}/add_professor",
         json={
@@ -114,7 +100,6 @@ def test_full_workflow():
     )
     assert add_response.status_code == 200
 
-    # 2. Search
     search_response = requests.post(
         f"{BASE_URL}/search",
         json={
@@ -124,7 +109,6 @@ def test_full_workflow():
     )
     assert search_response.status_code == 200
 
-    # 3. Visualization
     viz_response = requests.post(
         f"{BASE_URL}/search_with_visualization",
         json={
@@ -135,8 +119,6 @@ def test_full_workflow():
 
 @pytest.mark.integration
 class TestErrorScenarios:
-    """Group of tests for error scenarios"""
-
     def test_nonexistent_professor_search(self):
         response = requests.post(
             f"{BASE_URL}/search",
@@ -147,7 +129,6 @@ class TestErrorScenarios:
         )
         assert response.status_code == 500
 
-# Fixture for handling connection errors
 @pytest.fixture
 def check_api_available():
     try:
@@ -155,7 +136,6 @@ def check_api_available():
     except requests.ConnectionError:
         pytest.skip("API server is not available")
 
-# Add this as a dependency to all tests
 @pytest.mark.usefixtures("check_api_available")
 class TestWithConnectionCheck:
     """Tests that require API connection"""

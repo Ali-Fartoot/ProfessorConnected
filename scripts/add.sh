@@ -1,5 +1,4 @@
 #!/bin/bash
-
 # Add professor
 curl -X POST "http://localhost:8000/add_professor" \
      -H "Content-Type: application/json" \
