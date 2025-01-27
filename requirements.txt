@@ -43,7 +43,6 @@ fsspec==2024.12.0
 google-auth==2.37.0
 googleapis-common-protos==1.66.0
 grpcio==1.67.1
-grpcio-tools==1.69.0
 h11==0.14.0
 h2==4.1.0
 hpack==4.0.0
